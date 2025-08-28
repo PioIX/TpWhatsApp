@@ -5,13 +5,13 @@ import Button from "../components/Button"
 import { useRouter } from "next/router"
 
 export default function LoginPage(){
-    const [email, setEmail]  = useState("")
+    const [mail, setMail]  = useState("")
     const [password, setPassword]  = useState("")
     const [message, setMessage]  = useState("")
     const router = useRouter();
 
     async function ingresar(){
-        if(!email || !password){
+        if(!mail || !password){
             setMessage("Faltan datos")
             return
         }
@@ -21,7 +21,7 @@ export default function LoginPage(){
                 headers: {
                     "Content-Type" : "application/json"
                 },
-                body: JSON.stringify({email, password})
+                body: JSON.stringify({mail, password})
             })
             const data = await res.json()
             if(!res.ok){
@@ -35,34 +35,41 @@ export default function LoginPage(){
         }
     }
 
-    async function registrarse(){
-        if(!email || !password){
+     async function registrarse(){
+        if(!mail || !password){
             setMessage("Faltan datos")
             return
         }
         try{
-            const res = await fetch("http://localhost:4000/login", {
+            const res = await fetch("http://localhost:4000/register", {
                 method: "POST",
                 headers: {
                     "Content-Type" : "application/json"
                 },
-                body: JSON.stringify({email, password})
+                body: JSON.stringify({mail, password})
             })
             const data = await res.json()
+            if(!res.ok){
+                setMessage(data.error)
+                return
+            }
+            setMessage("Usuario registrado exitosamente")
         } catch(error) {
-            setMessage("Error al regsitrarse")
+            setMessage("Error al registrar usuario")
         }
     }
-    
+
     return (
         <>
             <div>
                 <h1>Login</h1>
-                <Input type="text" placeholder="Ingrese su mail"></Input>
-                <Input type="text" placeholder="Ingrese su contraseña"></Input>
+                <Input type="text" placeholder="Ingrese su mail" value={mail}></Input>
+                <Input type="text" placeholder="Ingrese su contraseña" value={password}></Input>
                 <Button text="Ingresar" onClick={ingresar}></Button>
                 <Button text="Registrarse" onClick={registrarse}></Button>
             </div>
         </>
     )
+
+
 }
