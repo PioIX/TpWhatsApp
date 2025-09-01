@@ -1,7 +1,7 @@
 "use client"
 
 import Input from "./Input"
-import BotonInput from "@/componentes/ButtonInput"
+import BotonInput from "@/components/ButtonInput"
 
 export default function Form(props) {
     function mensaje() {

@@ -1,5 +1,5 @@
 "use client"
-import styles from "@/componentes/Input.module.css"
+import styles from "@/components/Input.module.css"
 export default function Input(props) {
     return (
         <>
