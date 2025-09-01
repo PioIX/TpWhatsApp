@@ -118,7 +118,18 @@ app.post('/messages',async function (req, res) {
 })
 
 
-
-
-
+app.post('/findUser', async function (req, res) {
+    console.log("Buscando usuario:", req.body);
+    try {
+        const result = await realizarQuery(`
+            SELECT * FROM Users WHERE mail = "${req.body.mail}";
+        `);
+        
+        console.log("Resultado de búsqueda:", result);
+        res.send(result); // Devuelve un array (vacío si no existe, con datos si existe)
+    } catch (error) {
+        console.log("Error al buscar usuario:", error);
+        res.status(500).send({error: "No se pudo buscar el usuario"});
+    }
+});
 

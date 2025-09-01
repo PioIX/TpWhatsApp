@@ -1,6 +1,6 @@
 "use client";
 import clsx from "clsx";
-import styles from "@/componentes/Buttonwpp.module.css"
+import styles from "@/components/Buttonwpp.module.css"
 export default function Buttonwpp(props) {
     return (
         <button onClick={props.onClick} type={props.type}  className={
