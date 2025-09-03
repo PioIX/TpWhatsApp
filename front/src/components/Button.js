@@ -7,7 +7,7 @@ export default function Button(props) {
 
     return (
         <>
-            <button onClick={props.pro} type={props.type}>Elegi al pro</button>
+            <button onClick={props.pro} >{props.text}</button>
 
         </>
     )
