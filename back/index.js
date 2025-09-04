@@ -119,111 +119,33 @@ app.post('/messages',async function (req, res) {
 
 
 app.post('/findUser', async function (req, res) {
-    console.log("Buscando usuario:", req.body);
     try {
         const result = await realizarQuery(`
             SELECT * FROM Users WHERE mail = "${req.body.mail}";
         `);
         
         console.log("Resultado de búsqueda:", result);
-        res.send(result); // Devuelve un array (vacío si no existe, con datos si existe)
+        if(result.length > 0){
+            res.send(true)
+        } else {
+            res.send(false)
+        }
     } catch (error) {
         console.log("Error al buscar usuario:", error);
         res.status(500).send({error: "No se pudo buscar el usuario"});
     }
 });
 
-//FUNCIONES REGISTRO Y LOGIN
-
-// Función para registro de usuarios
-app.post('/RegistroUsuarios', async function (req, res) {
-    console.log("Datos recibidos para registro:", req.body);
-    
-    try {
-        const { username, phone_number, mail, password, photo } = req.body;
-        if (!username || !phone_number || !mail || !password) {
-            return res.json({
-                res: false,
-                message: "Todos los campos son obligatorios excepto la foto"
-            });
-        }
-
-        const emailExists = await realizarQuery(`
-            SELECT mail FROM Users WHERE mail = "${mail}"
-        `);
-        if (emailExists.length > 0) {
-            return res.json({
-                res: false,
-                message: "Ya existe un usuario con este correo electrónico"
-            });
-        }
-        const usernameExists = await realizarQuery(`
-            SELECT username FROM Users WHERE username = "${username}"
-        `);
-        if (usernameExists.length > 0) {
-            return res.json({
-                res: false,
-                message: "Ya existe un usuario con este nombre de usuario"
-            });
-        }
-        await realizarQuery(`
-            INSERT INTO Users (phone_number, photo, username, mail, password) 
-            VALUES ("${phone_number}", "${photo || ''}", "${username}", "${mail}", "${password}")
+login-back
+app.post('/loginUsuarios', async function (req,res) {
+    console.log(req.body)
+    try{
+        const result = await realizarQuery(`
+            SELECT * FROM Users WHERE mail = "${req.body.mail}";
         `);
 
-        res.json({
-            res: true,
-            message: "Usuario registrado exitosamente"
-        });
-
-    } catch (error) {
-        console.error("Error en registro:", error);
-        res.json({
-            res: false,
-            message: "Error interno del servidor"
-        });
+    } catch(error){
+        console.log("Error al ingresar",error)
     }
-});
+})
 
-// Función para login de usuarios
-app.post('/LoginUsuarios', async function (req, res) {
-    console.log("Datos recibidos para login:", req.body);
-    
-    try {
-        const { mail, password } = req.body;
-        if (!mail || !password) {
-            return res.json({
-                res: false,
-                message: "Email y contraseña son obligatorios"
-            });
-        }
-        const usuario = await realizarQuery(`
-            SELECT id, username, mail, phone_number, photo 
-            FROM Users 
-            WHERE mail = "${mail}" AND password = "${password}"
-        `);
-        if (usuario.length === 0) {
-            return res.json({
-                res: false,
-                message: "Credenciales incorrectas"
-            });
-        }
-        res.json({
-            res: true,
-            message: "Login exitoso",
-            user: {
-                id: usuario[0].id,
-                username: usuario[0].username,
-                mail: usuario[0].mail,
-                phone_number: usuario[0].phone_number,
-                photo: usuario[0].photo
-            }
-        });
-    } catch (error) {
-        console.error("Error en login:", error);
-        res.json({
-            res: false,
-            message: "Error interno del servidor"
-        });
-    }
-});
