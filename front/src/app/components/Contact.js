@@ -10,8 +10,8 @@ export default function Contact(props) {
         <>
             <div>
                 <img></img>  
-                <p class="username">{props.lastMsg}</p>
-                <p class="lastMsg">{props.username}</p>
+                <p className="username">{props.lastMsg}</p>
+                <p className="lastMsg">{props.username}</p>
             </div>
         </>
     )
