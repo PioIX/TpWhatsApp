@@ -1,363 +1,111 @@
-/* page.module.css - Diseño Vertical Elegante */
-
+/* Estilos generales para el contenedor */
 .container {
-  min-height: 100vh;
   display: flex;
-  align-items: center;
   justify-content: center;
-  padding: 2rem;
-  background: linear-gradient(180deg, #0f172a 0%, #1e293b 50%, #334155 100%);
-  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
-  position: relative;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #2d5d76; /* Fondo azul oscuro */
+  font-family: 'Arial', sans-serif;
 }
 
-.container::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: 
-    radial-gradient(circle at 30% 20%, rgba(59, 130, 246, 0.05) 0%, transparent 50%),
-    radial-gradient(circle at 70% 80%, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
-  pointer-events: none;
-}
-
-/* Tarjeta principal del formulario */
-.container > div {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  border-radius: 20px;
-  padding: 3rem 2.5rem;
-  box-shadow: 
-    0 25px 50px rgba(0, 0, 0, 0.15),
-    0 0 0 1px rgba(255, 255, 255, 0.1);
+/* Estilos del formulario */
+form {
+  background-color: #ffffff;
+  border-radius: 10px;
+  padding: 30px;
   width: 100%;
-  max-width: 420px;
-  position: relative;
-  z-index: 10;
-  animation: slideInUp 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  max-width: 400px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-@keyframes slideInUp {
-  0% {
-    opacity: 0;
-    transform: translateY(30px) scale(0.95);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.titulo {
-  font-size: 2.2rem;
-  font-weight: 700;
-  color: #1e293b;
-  margin-bottom: 2.5rem;
+h1.titulo {
   text-align: center;
-  position: relative;
-  animation: fadeInDown 0.6s ease-out 0.2s both;
+  font-size: 24px;
+  margin-bottom: 20px;
+  color: #1e5c74;
 }
 
-.titulo::after {
-  content: '';
-  position: absolute;
-  bottom: -12px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 60px;
-  height: 3px;
-  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
-  border-radius: 2px;
-}
-
-@keyframes fadeInDown {
-  0% {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
+/* Estilos para los campos de entrada */
 .input {
   width: 100%;
-  padding: 1.2rem 1.5rem;
-  margin: 0.8rem 0;
-  border: 2px solid #e2e8f0;
-  border-radius: 12px;
-  background-color: #ffffff;
-  color: #1e293b;
-  font-size: 1rem;
-  font-family: inherit;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-sizing: border-box;
-  position: relative;
-  animation: fadeInLeft 0.6s ease-out both;
-  animation-delay: calc(0.1s * var(--input-index, 0) + 0.3s);
-}
-
-.input::placeholder {
-  color: #64748b;
-  font-weight: 400;
+  padding: 12px;
+  margin-bottom: 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 16px;
+  background-color: #f2f8fa;
+  color: #333;
 }
 
 .input:focus {
+  border-color: #1e5c74;
   outline: none;
-  border-color: #3b82f6;
-  background-color: #fefefe;
-  transform: translateY(-1px);
-  box-shadow: 
-    0 10px 25px rgba(59, 130, 246, 0.1),
-    0 0 0 4px rgba(59, 130, 246, 0.1);
 }
 
-.input:hover:not(:focus) {
-  border-color: #cbd5e1;
-  transform: translateY(-0.5px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-}
-
-@keyframes fadeInLeft {
-  0% {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
+/* Estilo para los botones */
 .btn {
-  width: 100%;
-  padding: 1.2rem 2rem;
-  margin: 2rem 0 1.5rem 0;
+  background-color: #1e5c74;
+  color: #ffffff;
+  padding: 12px;
   border: none;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  color: white;
-  font-size: 1.1rem;
-  font-weight: 600;
-  font-family: inherit;
+  border-radius: 5px;
+  font-size: 16px;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-sizing: border-box;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 
-    0 8px 25px rgba(59, 130, 246, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  animation: fadeInUp 0.6s ease-out 0.6s both;
-}
-
-.btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
   width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.6s ease;
-}
-
-.btn:hover::before {
-  left: 100%;
 }
 
 .btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 
-    0 12px 35px rgba(59, 130, 246, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  background-color: #174d63;
 }
 
-.btn:active {
-  transform: translateY(0);
-  box-shadow: 
-    0 5px 15px rgba(59, 130, 246, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-}
-
-@keyframes fadeInUp {
-  0% {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
+/* Estilos para el texto de los enlaces */
 .texto {
-  color: #64748b;
-  font-size: 0.95rem;
   text-align: center;
-  margin-top: 1rem;
-  font-family: inherit;
-  animation: fadeIn 0.6s ease-out 0.8s both;
+  font-size: 14px;
+  color: #666;
 }
 
 .linkBoton {
   background: none;
   border: none;
-  color: #3b82f6;
-  font-weight: 600;
+  color: #1e5c74;
+  font-weight: bold;
   cursor: pointer;
-  text-decoration: none;
-  font-family: inherit;
-  padding: 0;
-  margin-left: 0.25rem;
-  font-size: 0.95rem;
-  transition: all 0.2s ease;
-  position: relative;
 }
 
 .linkBoton:hover {
-  color: #1d4ed8;
   text-decoration: underline;
-  text-underline-offset: 4px;
 }
 
-@keyframes fadeIn {
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
+/* Estilo para los mensajes emergentes */
+.messages {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background-color: #ff6b6b;
+  color: #fff;
+  padding: 15px;
+  border-radius: 5px;
+  font-size: 16px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
 }
 
-/* Contenedor principal con efecto tarjeta */
-.container > *:not(:last-child) {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  border-radius: 20px;
-  padding: 3rem 2.5rem;
-  box-shadow: 
-    0 25px 50px rgba(0, 0, 0, 0.15),
-    0 0 0 1px rgba(255, 255, 255, 0.1);
-  width: 100%;
-  max-width: 420px;
-  position: relative;
-  z-index: 10;
+/* Estilos del contacto al final */
+.contact {
+  margin-top: 40px;
+  text-align: center;
+  font-size: 14px;
 }
 
-/* Animaciones escalonadas para inputs */
-.input:nth-of-type(1) { --input-index: 1; }
-.input:nth-of-type(2) { --input-index: 2; }
-.input:nth-of-type(3) { --input-index: 3; }
-.input:nth-of-type(4) { --input-index: 4; }
-.input:nth-of-type(5) { --input-index: 5; }
-.input:nth-of-type(6) { --input-index: 6; }
-
-/* Responsive design */
-@media (max-width: 600px) {
-  .container {
-    padding: 1.5rem;
-  }
-  
-  .container > *:not(:last-child) {
-    padding: 2rem 1.5rem;
-    max-width: 100%;
-  }
-  
-  .titulo {
-    font-size: 1.8rem;
-    margin-bottom: 2rem;
-  }
-  
-  .input,
-  .btn {
-    padding: 1rem 1.2rem;
-    font-size: 0.95rem;
-  }
-  
-  .texto,
-  .linkBoton {
-    font-size: 0.9rem;
-  }
+.contact a {
+  color: #1e5c74;
+  text-decoration: none;
 }
 
-@media (max-width: 480px) {
-  .container {
-    padding: 1rem;
-  }
-  
-  .container > *:not(:last-child) {
-    padding: 1.5rem 1rem;
-  }
-  
-  .titulo {
-    font-size: 1.6rem;
-    margin-bottom: 1.5rem;
-  }
-}
-
-/* Estados de focus mejorados */
-.input:focus {
-  outline: none;
-  border-color: #3b82f6;
-  background-color: #fefefe;
-  transform: translateY(-1px);
-  box-shadow: 
-    0 10px 25px rgba(59, 130, 246, 0.1),
-    0 0 0 4px rgba(59, 130, 246, 0.1);
-}
-
-.btn:focus {
-  outline: none;
-  box-shadow: 
-    0 0 0 4px rgba(59, 130, 246, 0.3),
-    0 12px 35px rgba(59, 130, 246, 0.4);
-}
-
-.linkBoton:focus {
-  outline: 2px solid #3b82f6;
-  outline-offset: 2px;
-  border-radius: 2px;
-}
-
-/* Mejora visual del placeholder */
-.input:focus::placeholder {
-  opacity: 0.5;
-  transform: translateY(-2px);
-  transition: all 0.3s ease;
-}
-
-/* Efecto de carga en el botón */
-.btn:active::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 20px;
-  height: 20px;
-  margin: -10px 0 0 -10px;
-  border: 2px solid transparent;
-  border-top: 2px solid rgba(255, 255, 255, 0.7);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+.contact a:hover {
+  text-decoration: underline;
 }
 
 
-.container > h1,
-.container > div:not(:last-child) {
-  width: 100%;
-  max-width: 400px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
 
