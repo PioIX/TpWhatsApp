@@ -1,9 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import styles from '../page.chats.module.css'; 
-
-
 
 export default function ChatsPage() {
     const [chats, setChats] = useState([]);

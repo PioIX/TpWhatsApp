@@ -136,7 +136,6 @@ app.post('/findUser', async function (req, res) {
     }
 });
 
-login-back
 app.post('/loginUsuarios', async function (req,res) {
     console.log(req.body)
     try{
