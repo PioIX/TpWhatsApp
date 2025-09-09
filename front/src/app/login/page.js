@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Messages from "../components/Message";
-import Input from "../components/Input";
-import Button from "../components/Button";
-import Contact from "../components/Contact";
-import styles from "../page.module.css";
+import Messages from "../../components/Message";
+import Input from "../../components/Input";
+import Button from "../../components/Button";
+import Contact from "../../components/Contact";
+import styles from "./page.module.css";
 
 export default function RegistroYLogin() {
   const [modo, setModo] = useState("login");
@@ -46,9 +46,9 @@ export default function RegistroYLogin() {
       const result = await response.json()
       console.log("Respuesta del servidor:", result)
 
-      if (result.res === true) {
+      if (result === true) {
         showModal("Éxito", "¡Has iniciado sesión correctamente!");
-        router.push("/dashboard");
+        router.push("/chats");
       } else {
         showModal("Error", result.message || "Credenciales incorrectas");
       }
@@ -106,6 +106,7 @@ export default function RegistroYLogin() {
             value={mail}
             onChange={(e) => setMail(e.target.value)}
           />
+          <br></br>
           <Input
             className={styles.input}
             type="password"
@@ -113,6 +114,7 @@ export default function RegistroYLogin() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
+          <br></br>
           <Button onClick={ingresar} text="Ingresar"></Button>
           <p className={styles.texto}>
             ¿No tenés cuenta?{" "}
@@ -134,6 +136,7 @@ export default function RegistroYLogin() {
             value={username}
             onChange={(e) => setUsername(e.target.value)}
           />
+          <br></br>
           <Input
             className={styles.input}
             type="email"
@@ -141,6 +144,7 @@ export default function RegistroYLogin() {
             value={mail}
             onChange={(e) => setMail(e.target.value)}
           />
+          <br></br>
           <Input
             className={styles.input}
             type="tel"
@@ -148,6 +152,7 @@ export default function RegistroYLogin() {
             value={phoneNumber}
             onChange={(e) => setPhoneNumber(e.target.value)}
           />
+          <br></br>
           <Input
             className={styles.input}
             type="url"
@@ -155,6 +160,7 @@ export default function RegistroYLogin() {
             value={photo}
             onChange={(e) => setPhoto(e.target.value)}
           />
+          <br></br>
           <Input
             className={styles.input}
             type="password"
@@ -162,6 +168,7 @@ export default function RegistroYLogin() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
+          <br></br>
           <Input
             className={styles.input}
             type="password"
@@ -169,6 +176,7 @@ export default function RegistroYLogin() {
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
           />
+          <br></br>
           <Button className={styles.btn} onClick={registrar} text="Registrarse"></Button>
           <p className={styles.texto}>
             ¿Ya tenés cuenta?{" "}
