@@ -158,9 +158,10 @@ app.post('/registerUser', async function (req,res) {
 })
 
 app.post('/chatsUser', async function (req,res) {
+    console.log(req.body)
     try{
         const chats = await realizarQuery(`
-            SELECT * FROM Chats WHERE mail = "${req.body.user}"
+            SELECT * FROM Chats WHERE id_user = "${req.body.userId}"
             `)
         console.log("Chats encontrados:", chats)
         res.send({
