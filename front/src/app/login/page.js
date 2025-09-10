@@ -2,10 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Messages from "../../components/Message";
 import Input from "../../components/Input";
 import Button from "../../components/Button";
-import Contact from "../../components/Contact";
 import styles from "./page.module.css";
 
 export default function RegistroYLogin() {
@@ -37,7 +35,7 @@ export default function RegistroYLogin() {
       password: password,
     }
     try {
-      const response = await fetch("http://localhost:4000/findUser", {
+      const response = await fetch("http://localhost:4000/loginUser", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(datosLogin),
@@ -73,7 +71,7 @@ export default function RegistroYLogin() {
     };
 
     try {
-      const response = await fetch("http://localhost:4000/RegistroUsuarios", {
+      const response = await fetch("http://localhost:4000/registerUser", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(datosRegistro),
@@ -99,104 +97,44 @@ export default function RegistroYLogin() {
       {modo === "login" ? (
         <>
           <h1 className={styles.titulo}>Iniciar sesión</h1>
-          <Input
-            className={styles.input}
-            type="email"
-            placeholder="Correo electrónico"
-            value={mail}
-            onChange={(e) => setMail(e.target.value)}
-          />
+          <Input type="email" placeholder="Correo electrónico" value={mail} onChange={(e) => setMail(e.target.value)}></Input>
           <br></br>
-          <Input
-            className={styles.input}
-            type="password"
-            placeholder="Contraseña"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          <Input type="password" placeholder="Contraseña" value={password} onChange={(e) => setPassword(e.target.value)}></Input>
           <br></br>
           <Button onClick={ingresar} text="Ingresar"></Button>
           <p className={styles.texto}>
             ¿No tenés cuenta?{" "}
-            <button
-              className={styles.linkBoton}
-              onClick={() => setModo("registro")}
-            >
-              Registrate
-            </button>
+            <button className={styles.linkBoton} onClick={() => setModo("registro")}>Registrate</button>
           </p>
         </>
       ) : (
         <>
           <h1 className={styles.titulo}>Registrarse</h1>
-          <Input
-            className={styles.input}
-            type="text"
-            placeholder="Nombre de usuario"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
+          <Input type="text" placeholder="Nombre de usuario" value={username} onChange={(e) => setUsername(e.target.value)}></Input>
           <br></br>
-          <Input
-            className={styles.input}
-            type="email"
-            placeholder="Correo electrónico"
-            value={mail}
-            onChange={(e) => setMail(e.target.value)}
-          />
+          <Input type="email" placeholder="Correo electrónico" value={mail} onChange={(e) => setMail(e.target.value)}></Input>
           <br></br>
-          <Input
-            className={styles.input}
-            type="tel"
-            placeholder="Número de teléfono"
-            value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
-          />
+          <Input type="tel" placeholder="Número de teléfono" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)}></Input>
           <br></br>
-          <Input
-            className={styles.input}
-            type="url"
-            placeholder="URL de la foto (opcional)"
-            value={photo}
-            onChange={(e) => setPhoto(e.target.value)}
-          />
+          <Input type="url" placeholder="URL de la foto (opcional)" value={photo} onChange={(e) => setPhoto(e.target.value)}></Input>
           <br></br>
-          <Input
-            className={styles.input}
-            type="password"
-            placeholder="Contraseña"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          <Input type="password" placeholder="Contraseña" value={password} onChange={(e) => setPassword(e.target.value)}></Input>
           <br></br>
-          <Input
-            className={styles.input}
-            type="password"
-            placeholder="Confirmar contraseña"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-          />
+          <Input type="password" placeholder="Confirmar contraseña" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}></Input>
           <br></br>
-          <Button className={styles.btn} onClick={registrar} text="Registrarse"></Button>
+          <Button onClick={registrar} text="Registrarse"></Button>
           <p className={styles.texto}>
             ¿Ya tenés cuenta?{" "}
-            <button
-              className={styles.linkBoton}
-              onClick={() => setModo("login")}
-            >
-              Inicia sesión
-            </button>
+            <button className={styles.linkBoton} onClick={() => setModo("login")}>Inicia sesión</button>
           </p>
         </>
       )}
 
       {mostrarMensaje && (
-        <Messages
-          texto={textoMensaje}
-        />
+        <div className={styles.mensaje}>
+          {textoMensaje}
+        </div>
       )}
-
-      <Contact />
     </div>
   );
 }
