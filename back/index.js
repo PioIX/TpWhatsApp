@@ -118,7 +118,7 @@ app.post('/messages',async function (req, res) {
 })
 
 
-app.post('/findUser', async function (req, res) {
+app.post('/loginUser', async function (req, res) {
     try {
         const result = await realizarQuery(`
             SELECT * FROM Users WHERE mail = "${req.body.mail}";
@@ -136,13 +136,22 @@ app.post('/findUser', async function (req, res) {
     }
 });
 
-app.post('/loginUsuarios', async function (req,res) {
+app.post('/registerUser', async function (req,res) {
     console.log(req.body)
     try{
-        const result = await realizarQuery(`
+        const existingUser = await realizarQuery(`
             SELECT * FROM Users WHERE mail = "${req.body.mail}";
         `);
-
+        if (existingUser.length > 0) {
+            res.send({ res: false, message: "Ya existe un usuario con este email" });
+            return;
+        }
+        const insertResult = await realizarQuery(`
+            INSERT INTO Users (username, phone_number, mail, password, photo) 
+            VALUES ("${req.body.username}", "${req.body.phone_number}", "${req.body.mail}", "${req.body.password}", "${req.body.photo}");
+        `);
+        console.log("Usuario registrado:", insertResult);
+        res.send({ res: true, message: "Usuario registrado correctamente" });
     } catch(error){
         console.log("Error al ingresar",error)
     }
