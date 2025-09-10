@@ -44,8 +44,10 @@ export default function RegistroYLogin() {
       const result = await response.json()
       console.log("Respuesta del servidor:", result)
 
-      if (result === true) {
+      if (result.validar === true) {
         showModal("Éxito", "¡Has iniciado sesión correctamente!");
+        localStorage.setItem("userMail", mail)
+        localStorage.setItem("userId", result.id)
         router.push("/chats");
       } else {
         showModal("Error", result.message || "Credenciales incorrectas");
