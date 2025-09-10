@@ -126,9 +126,9 @@ app.post('/loginUser', async function (req, res) {
         
         console.log("Resultado de búsqueda:", result);
         if(result.length > 0){
-            res.send(true)
+            res.send({validar: true, id: result[0].id_user})
         } else {
-            res.send(false)
+            res.send({validar: false})
         }
     } catch (error) {
         console.log("Error al buscar usuario:", error);
@@ -157,3 +157,17 @@ app.post('/registerUser', async function (req,res) {
     }
 })
 
+app.post('/chatsUser', async function (req,res) {
+    try{
+        const chats = await realizarQuery(`
+            SELECT * FROM Chats WHERE mail = "${req.body.user}"
+            `)
+        console.log("Chats encontrados:", chats)
+        res.send({
+            success: true,
+            chats: chats
+        })
+    } catch(error){
+        console.log("Error al traer los chats del usuario", error)
+    }
+})
