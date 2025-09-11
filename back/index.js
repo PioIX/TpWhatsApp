@@ -172,3 +172,23 @@ app.post('/chatsUser', async function (req,res) {
         console.log("Error al traer los chats del usuario", error)
     }
 })
+
+app.post('/newChat', async function (req,res) {
+    try {
+        const response = await realizarQuery(`
+            SELECT * FROM Chats WHERE id_chat = "${req.body.id_chat}";
+        `);
+        if (response.length > 0) {
+            res.send({ res: false, message: "Ya existe un chat con este ID" });
+            return;
+        }
+        const result = await realizarQuery(`
+            INSERT INTO Chats (is_group, photo_group, chat_name, id_user) VALUES
+            ("${req.body.is_group}","${req.body.photo_group}","${req.body.chat_name}","${req.body.id_user}";
+        `);
+        console.log("Chats registrado:", result);
+        res.send({ res: true, message: "Usuario registrado correctamente" });
+    } catch(error){
+        console.log("Error al crear nuevo chat", error)
+    }
+})
