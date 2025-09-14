@@ -108,8 +108,195 @@
   background-color: rgba(0, 0, 0, 0.3);
 }
 
-/* Tema oscuro */
+/* ======= ESTILOS DEL MODAL/POPUP ======= */
+.modal {
+  background: white;
+  padding: 35px 30px 30px;
+  border-radius: 16px;
+  max-width: 420px;
+  width: 90%;
+  margin: auto;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e9edef;
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.header {
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+.header h2 {
+  margin: 0;
+  color: #111b21;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.content {
+  margin-bottom: 30px;
+}
+
+.content p {
+  margin-bottom: 20px;
+  color: #667781;
+  font-size: 15px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.mailInput {
+  width: 100%;
+  padding: 16px 0;
+  border: none;
+  border-bottom: 2px solid #e0e0e0;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+  background: transparent;
+  color: #111b21;
+  outline: none;
+  font-family: inherit;
+}
+
+.mailInput::placeholder {
+  color: #a0a0a0;
+  font-size: 15px;
+  transition: all 0.3s ease;
+}
+
+.mailInput:focus {
+  border-bottom-color: #00a884;
+  padding-bottom: 15px;
+  border-bottom-width: 3px;
+}
+
+.mailInput:focus::placeholder {
+  color: #c0c0c0;
+  transform: translateY(-2px);
+}
+
+.mailInput:not(:placeholder-shown) {
+  border-bottom-color: #333;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-top: 35px;
+}
+
+.cancelBtn {
+  padding: 12px 24px;
+  background: transparent;
+  border: 2px solid #e0e0e0;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #667781;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.cancelBtn:hover {
+  border-color: #c0c0c0;
+  color: #111b21;
+  background: #f9f9f9;
+}
+
+.createBtn {
+  padding: 12px 24px;
+  background: #00a884;
+  color: white;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 12px rgba(0, 168, 132, 0.3);
+  font-family: inherit;
+  min-width: 120px;
+}
+
+.createBtn:hover {
+  background: #008f72;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 168, 132, 0.4);
+}
+
+.createBtn:active {
+  transform: translateY(-1px);
+}
+
+.createBtn:disabled {
+  background: #c0c0c0;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Tema oscuro para el modal */
 @media (prefers-color-scheme: dark) {
+  .modal {
+    background: #2a2f32;
+    border-color: #3b4a54;
+  }
+  
+  .header h2 {
+    color: #e9edef;
+  }
+  
+  .content p {
+    color: #8696a0;
+  }
+  
+  .mailInput {
+    color: #e9edef;
+    border-bottom-color: #3b4a54;
+  }
+  
+  .mailInput::placeholder {
+    color: #6b7075;
+  }
+  
+  .mailInput:focus {
+    border-bottom-color: #00a884;
+  }
+  
+  .mailInput:focus::placeholder {
+    color: #8696a0;
+  }
+  
+  .mailInput:not(:placeholder-shown) {
+    border-bottom-color: #e9edef;
+  }
+  
+  .cancelBtn {
+    border-color: #3b4a54;
+    color: #8696a0;
+  }
+  
+  .cancelBtn:hover {
+    background: #111b21;
+    border-color: #5a6268;
+    color: #e9edef;
+  }
+  
   .title {
     background-color: #111b21;
     border-bottom-color: #2a2f32;
@@ -151,5 +338,20 @@
   .chatContent {
     width: 100%;
     height: 60%;
+  }
+  
+  .modal {
+    max-width: 350px;
+    padding: 30px 25px 25px;
+  }
+  
+  .actions {
+    flex-direction: column-reverse;
+    gap: 10px;
+  }
+  
+  .cancelBtn,
+  .createBtn {
+    width: 100%;
   }
 }
