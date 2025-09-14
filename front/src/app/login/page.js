@@ -98,9 +98,9 @@ export default function RegistroYLogin() {
       {modo === "login" ? (
         <>
           <h1 className={styles.titulo}>Iniciar sesión</h1>
-          <Input type="email" placeholder="Correo electrónico" value={mail} onChange={(e) => setMail(e.target.value)}></Input>
+          <Input type="email" placeholder="Correo electrónico" value={mail} onChange={(e) => setMail(e.target.value)} page="login"></Input>
           <br></br>
-          <Input type="password" placeholder="Contraseña" value={password} onChange={(e) => setPassword(e.target.value)}></Input>
+          <Input type="password" placeholder="Contraseña" value={password} onChange={(e) => setPassword(e.target.value)} page="login"></Input>
           <br></br>
           <Button onClick={ingresar} text="Ingresar"></Button>
           <p className={styles.texto}>
@@ -111,17 +111,17 @@ export default function RegistroYLogin() {
       ) : (
         <>
           <h1 className={styles.titulo}>Registrarse</h1>
-          <Input type="text" placeholder="Nombre de usuario" value={username} onChange={(e) => setUsername(e.target.value)}></Input>
+          <Input type="text" placeholder="Nombre de usuario" value={username} onChange={(e) => setUsername(e.target.value)} page="login"></Input>
           <br></br>
-          <Input type="email" placeholder="Correo electrónico" value={mail} onChange={(e) => setMail(e.target.value)}></Input>
+          <Input type="email" placeholder="Correo electrónico" value={mail} onChange={(e) => setMail(e.target.value)} page="login"></Input>
           <br></br>
-          <Input type="tel" placeholder="Número de teléfono" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)}></Input>
+          <Input type="tel" placeholder="Número de teléfono" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} page="login"></Input>
           <br></br>
-          <Input type="url" placeholder="URL de la foto (opcional)" value={photo} onChange={(e) => setPhoto(e.target.value)}></Input>
+          <Input type="url" placeholder="URL de la foto (opcional)" value={photo} onChange={(e) => setPhoto(e.target.value)} page="login"></Input>
           <br></br>
-          <Input type="password" placeholder="Contraseña" value={password} onChange={(e) => setPassword(e.target.value)}></Input>
+          <Input type="password" placeholder="Contraseña" value={password} onChange={(e) => setPassword(e.target.value)} page="login"></Input>
           <br></br>
-          <Input type="password" placeholder="Confirmar contraseña" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}></Input>
+          <Input type="password" placeholder="Confirmar contraseña" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} page="login"cd></Input>
           <br></br>
           <Button onClick={registrar} text="Registrarse"></Button>
           <p className={styles.texto}>

@@ -67,6 +67,15 @@
   line-height: 1.2;
 }
 
+.selected {
+  background-color: #e5ddd5 !important;
+  border-left: 4px solid #00a884 !important;
+}
+
+.selected:hover {
+  background-color: #e5ddd5 !important;
+}
+
 /* Tema oscuro */
 @media (prefers-color-scheme: dark) {
   .contactButton {
@@ -88,6 +97,15 @@
   
   .lastMsg {
     color: #8696a0;
+  }
+
+  .selected {
+    background-color: #2a2f32 !important;
+    border-left-color: #00a884 !important;
+  }
+
+  .selected:hover {
+    background-color: #2a2f32 !important;
   }
 }
 

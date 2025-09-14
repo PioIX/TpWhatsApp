@@ -1,4 +1,4 @@
-/* Input centrado con fondo blanco y diseño limpio */
+/* Input centrado con fondo blanco y diseño limpio - ESTILOS BASE */
 .input {
   width: 100%;
   max-width: 350px;
@@ -17,13 +17,88 @@
   display: block;
 }
 
-/* Placeholder styling */
+/* ESTILOS ESPECÍFICOS PARA PÁGINA DE LOGIN */
+.loginPage {
+  max-width: 400px;
+  margin-bottom: 16px;
+  font-size: 18px;
+  border-radius: 16px;
+  padding: 14px 18px;
+  border: 2px solid #d1d5db;
+}
+
+.loginPage:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.loginPage:hover {
+  border-color: #9ca3af;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+}
+
+/* ESTILOS ESPECÍFICOS PARA MODAL (basado en .mailInput de page.module.css) */
+.modalInput {
+  width: 100%;
+  padding: 16px 0;
+  border: none;
+  border-bottom: 2px solid #e0e0e0;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+  background: transparent;
+  color: #111b21;
+  outline: none;
+  font-family: inherit;
+  border-radius: 0;
+  box-shadow: none;
+  margin: 0;
+  max-width: none;
+}
+
+.modalInput::placeholder {
+  color: #a0a0a0;
+  font-size: 15px;
+  transition: all 0.3s ease;
+}
+
+.modalInput:focus {
+  border-bottom-color: #00a884;
+  padding-bottom: 15px;
+  border-bottom-width: 3px;
+  box-shadow: none;
+}
+
+.modalInput:focus::placeholder {
+  color: #c0c0c0;
+  transform: translateY(-2px);
+}
+
+.modalInput:not(:placeholder-shown) {
+  border-bottom-color: #333;
+}
+
+.modalInput:hover {
+  border-color: #e0e0e0;
+  border-bottom-color: #d0d0d0;
+  box-shadow: none;
+}
+
+.modalInput:valid:not(:placeholder-shown) {
+  border-bottom-color: #333;
+}
+
+.modalInput:invalid:not(:placeholder-shown) {
+  border-bottom-color: #ef4444;
+}
+
+/* Placeholder styling base */
 .input::placeholder {
   color: #94a3b8;
   font-weight: 400;
 }
 
-/* Estados de interacción */
+/* Estados de interacción base */
 .input:hover {
   border-color: #cbd5e1;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
@@ -52,6 +127,30 @@
   cursor: not-allowed;
 }
 
+/* Tema oscuro para modal */
+@media (prefers-color-scheme: dark) {
+  .modalInput {
+    color: #e9edef;
+    border-bottom-color: #3b4a54;
+  }
+  
+  .modalInput::placeholder {
+    color: #6b7075;
+  }
+  
+  .modalInput:focus {
+    border-bottom-color: #00a884;
+  }
+  
+  .modalInput:focus::placeholder {
+    color: #8696a0;
+  }
+  
+  .modalInput:not(:placeholder-shown) {
+    border-bottom-color: #e9edef;
+  }
+}
+
 /* Responsividad */
 @media (max-width: 768px) {
   .input {
@@ -59,11 +158,21 @@
     padding: 10px 14px;
     font-size: 16px; /* Previene zoom en iOS */
   }
+
+  .loginPage {
+    max-width: 350px;
+    font-size: 16px;
+    padding: 12px 16px;
+  }
 }
 
 @media (max-width: 480px) {
   .input {
     max-width: 280px;
     padding: 10px 12px;
+  }
+
+  .loginPage {
+    max-width: 300px;
   }
 }

@@ -1,6 +1,8 @@
 "use client";
 
 import Contact from "@/components/Contact";
+import Input from "@/components/Input";
+import Message from "@/components/Message";
 import { useEffect, useState } from "react";
 import styles from "./page.module.css";
 import Popup from 'reactjs-popup';
@@ -9,6 +11,9 @@ export default function ChatsPage() {
     const [chats, setChats] = useState([])
     const [isPopupOpen, setPopupOpen] = useState(false);
     const [mailInput, setMailInput] = useState("");
+    const [selectedChat, setSelectedChat] = useState(null);
+    const [messages, setMessages] = useState([]);
+    const [newMessage, setNewMessage] = useState("");
 
     useEffect(()=>{
         let userId= localStorage.getItem("userId")
@@ -79,6 +84,65 @@ export default function ChatsPage() {
         }
     }
 
+    async function chatHistory(chat){
+        const userId= localStorage.getItem("userId")
+
+        const data = {
+            id_chat: chat.id_chat,
+            userId: userId
+        }
+
+        try{
+            const response = await fetch("http://localhost:4000/chatHistory", {
+                method: "POST",
+                headers: {"Content-Type" : "application/json"},
+                body: JSON.stringify(data)
+            });
+            const result = await response.json();
+            console.log("Respuesta del servidor: ", result)
+            if(result.res === true){
+                setSelectedChat(chat);
+                setMessages(result.messages || [])
+            } else {
+                console.log("Error al cargar historial:", result.message)
+            }
+        } catch(error){
+            console.log("Error al cargar historial:", error)
+        }
+    }
+
+    async function sendMessage() {
+        if (!newMessage.trim() || !selectedChat) return;
+
+        const userId = localStorage.getItem("userId");
+        
+        try {
+            const messageResponse = await fetch("http://localhost:4000/messages", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    photo: "",
+                    date: new Date().toISOString(),
+                    id_user: userId,
+                    content: newMessage.trim()
+                })
+            });
+
+            if (messageResponse.ok) {
+                await chatHistory(selectedChat);
+                setNewMessage("");
+            }
+        } catch (error) {
+            console.log("Error al enviar mensaje:", error);
+        }
+    }
+
+    const handleKeyPress = (e) => {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    };
+
     return (
         <>
             <div className={styles.container}>
@@ -90,13 +154,47 @@ export default function ChatsPage() {
                     <ul>
                         {chats.map((chat, index) => (
                             <li key={index}>
-                                <Contact chats={chat}></Contact>
+                                <Contact chats={chat} onClick={() => chatHistory(chat)} isSelected = {selectedChat && selectedChat.id_chat === chat.id_chat}></Contact>
                             </li>
                         ))}
                     </ul>
                 </div>
                 <div className={styles.chatContent}>
+                        {selectedChat ? (
+                            <>
+                                <div className={styles.chatHeader}>
+                                    <div className={styles.chatHeaderInfo}>
+                                        <img src={selectedChat.photo || "https://imagenes2.eltiempo.com/files/image_600_455/files/fp/uploads/2025/04/01/67ec4ef31f2ce.r_d.866-866-3464.jpeg"}
+                                            alt={selectedChat.chat_name || selectedChat.username}
+                                            className={styles.chatAvatar}
+                                        ></img>
+                                        <h3>{selectedChat.chat_name || selectedChat.username}</h3>
+                                    </div>
+                                </div>
 
+                                <div className={styles.messagesArea}>
+                                    {messages.length > 0 ? (
+                                        messages.map((message, index) => (
+                                            <Message key={index} message={message} isMyMessage={message.id_user === localStorage.getItem("userId")} userId={localStorage.getItem("userId")}></Message>
+                                        ))
+                                    ) : (
+                                        <div className={styles.noMessages}>
+                                            No hay mensajes en este chat
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className={styles.messageInput}>
+                                    <Input type="text" placeholder="Escribe un mensaje..." value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyPress = {handleKeyPress} page="chat"></Input>
+                                    <button onClick={sendMessage} className={styles.sendButton} disabled={!newMessage.trim()}>Enviar</button>
+                                </div>
+                            </>
+                        ) : (
+                            <div className={styles.noChatSelected}>
+                                <h3>Selecciona un chat para comenzar</h3>
+                                <p>Elige una conversación de la lista para ver los mensajes</p>
+                            </div>
+                        )}
                 </div>
 
                 <Popup 
@@ -112,7 +210,7 @@ export default function ChatsPage() {
                         </div>
                         <div className={styles.content}>
                             <p>Ingresa el mail del usuario con quien quieres chatear</p>
-                            <input type="mail" placeholder="ejemplo@mail.com" value={mailInput} onChange={(e) =>setMailInput(e.target.value)} className={styles.mailInput}></input>
+                            <Input type="mail" placeholder="ejemplo@mail.com" value={mailInput} onChange={(e) =>setMailInput(e.target.value)} page="modal"></Input>
                         </div>
                         <div className={styles.actions}>
                             <button onClick={closePopup} className={styles.cancelBtn}>Cancelar</button>
