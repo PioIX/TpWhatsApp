@@ -1,12 +1,78 @@
+/* ChatMessage.module.css */
 .message {
-    background-color: #ececbb; 
-    color: #000000;
-    padding: 10px 14px;
-    border-radius: 16px 16px 0 16px; 
-    font-size: 14px;
-    max-width: 70%;
-    margin: 8px 0;
-    display: inline-block;
-    position: relative;
-    box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+  max-width: 65%;
+  margin: 2px 0;
+  position: relative;
+  animation: messageSlideIn 0.2s ease-out;
+}
+
+@keyframes messageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.myMessage {
+  align-self: flex-end;
+  margin-left: auto;
+}
+
+.otherMessage {
+  align-self: flex-start;
+  margin-right: auto;
+}
+
+.messageContent {
+  padding: 8px 12px 6px;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.4;
+  word-wrap: break-word;
+  position: relative;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.myMessage .messageContent {
+  background-color: #d9fdd3;
+  color: #111b21;
+  border-bottom-right-radius: 2px;
+}
+
+.otherMessage .messageContent {
+  background-color: #ffffff;
+  color: #111b21;
+  border-bottom-left-radius: 2px;
+}
+
+.messageTime {
+  font-size: 11px;
+  color: #667781;
+  margin-top: 2px;
+  text-align: right;
+}
+
+.otherMessage .messageTime {
+  text-align: left;
+}
+
+/* Tema oscuro */
+@media (prefers-color-scheme: dark) {
+  .myMessage .messageContent {
+    background-color: #005c4b;
+    color: #e9edef;
+  }
+  
+  .otherMessage .messageContent {
+    background-color: #202c33;
+    color: #e9edef;
+  }
+  
+  .messageTime {
+    color: #8696a0;
+  }
 }

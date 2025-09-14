@@ -209,3 +209,26 @@ app.post('/newChat', async function (req,res) {
         res.send({res: false, message: "Error al crear chat"})
     }
 })
+
+app.post('/chatHistory', async function(req,res) {
+    console.log("Datos recibidos para historial:", req.body)
+    try{
+        const {id_chat, userId} = req.body
+        const messages = await realizarQuery(`
+            SELECT m.*, u.username 
+            FROM Messages m
+            INNER JOIN ChatsMessage cm ON m.id_message = cm.id_message
+            INNER JOIN Users u ON m.id_user = u.id_user
+            WHERE cm.id_chat = "${id_chat}"
+            ORDER BY m.date ASC 
+            `)
+        console.log("Mensajes encontrados:", messages)
+        res.send({
+            res:true,
+            messages: messages
+        })
+    } catch(error){
+        console.log("Error al obtener historial del chat:", error)
+        res.send({res:false, message: "Error al obtener historial"})
+    }
+})

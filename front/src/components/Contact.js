@@ -1,11 +1,16 @@
 "use client"
 
-import styles from "./Contact.module.css"
+import styles from "./Contact.module.css";
+import clsx from "clsx"
 
-export default function Contact({chats}) {
+export default function Contact({chats, isSelected, ...props}) {
     return(
         <>
-            <button className={styles.contactButton}>
+            <button 
+                className={clsx(styles.contactButton, {
+                [styles.selected]: isSelected
+                })} onClick={props.onClick}
+            >
                 <div className={styles.contactContainer}>
                     <img src={chats.photo_group || "https://imagenes2.eltiempo.com/files/image_600_455/files/fp/uploads/2025/04/01/67ec4ef31f2ce.r_d.866-866-3464.jpeg"} alt="Profile" ></img>
                     <div className={styles.contactInfo}>
