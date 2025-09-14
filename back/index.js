@@ -1,6 +1,7 @@
 var express = require('express'); //Tipo de servidor: Express
 var bodyParser = require('body-parser'); //Convierte los JSON
 var cors = require('cors');
+const session = require("express-session"); // Para el manejo de las variables de sesión
 const { realizarQuery } = require('./modulos/mysql');
 const http = require('http');
 const { Server } = require('socket.io');
