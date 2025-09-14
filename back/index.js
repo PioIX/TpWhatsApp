@@ -174,21 +174,38 @@ app.post('/chatsUser', async function (req,res) {
 })
 
 app.post('/newChat', async function (req,res) {
+    console.log("Datos recibidos: ", req.body)
     try {
+        const{userId,mail}=req.body
+        console.log("Buscando usuario con mail: ", mail)
         const response = await realizarQuery(`
-            SELECT * FROM Chats WHERE id_chat = "${req.body.id_chat}";
+            SELECT id_user, username FROM Users WHERE mail = "${mail}";
         `);
-        if (response.length > 0) {
-            res.send({ res: false, message: "Ya existe un chat con este ID" });
+        if (response.length === 0) {
+            console.log("Usuario no encontrado")
+            res.send({ res: false, message: "Usuario no encontrado" });
             return;
+        }
+        const targetUserId = response[0].id_user
+        const targetUsername = response[0].username
+        console.log("Usuario encontrado")
+        //Corroboro que ese usuario no tenga un chat con ese usuario previamente
+        const existingChat = await realizarQuery(`
+            SELECT id_chat FROM Chats WHERE id_user="${userId}" AND chat_name = "${targetUsername}" AND is_group = "0"
+        `);
+        if(existingChat.length>0){
+            console.log("Chat existente")
+            res.send({res:false, message: "Chat existente"})
+            return
         }
         const result = await realizarQuery(`
             INSERT INTO Chats (is_group, photo_group, chat_name, id_user) VALUES
-            ("${req.body.is_group}","${req.body.photo_group}","${req.body.chat_name}","${req.body.id_user}";
+            ("0","", "${targetUsername}","${userId}")
         `);
-        console.log("Chats registrado:", result);
-        res.send({ res: true, message: "Usuario registrado correctamente" });
+        console.log("Chats creado:", result);
+        res.send({ res: true, message: "Chat creado correctamente" });
     } catch(error){
         console.log("Error al crear nuevo chat", error)
+        res.send({res: false, message: "Error al crear chat"})
     }
 })

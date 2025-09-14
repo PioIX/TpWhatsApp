@@ -7,7 +7,8 @@ import Popup from 'reactjs-popup';
 
 export default function ChatsPage() {
     const [chats, setChats] = useState([])
-
+    const [isPopupOpen, setPopupOpen] = useState(false);
+    const [mailInput, setMailInput] = useState("");
 
     useEffect(()=>{
         let userId= localStorage.getItem("userId")
@@ -35,13 +36,30 @@ export default function ChatsPage() {
         }
     }
 
+    //Abrir el popup
+    const openPopup = () => {
+        setPopupOpen(true)
+    }
+
+    //Cerrar el popup
+    const closePopup = () => {
+        setPopupOpen(false)
+        setMailInput("") //Limpia el input al cerrar el popup
+    }
+
     async function newChat(){
         const userId= localStorage.getItem("userId")
+        if(!mailInput.trim()) {
+            alert("Por favor, ingresa un mail")
+            return
+        }
+        
         const datosNewChat = {
             userId: userId,
+            mail: mailInput.trim() //Se envia el mail al back
         }
         try{
-            console.log("Entro al try")
+            console.log("Creando chat con: ", datosNewChat)
             const response = await fetch("http://localhost:4000/newChat", {
                 method: "POST",
                 headers: { "Content-Type" : "application/json"},
@@ -51,11 +69,10 @@ export default function ChatsPage() {
             console.log("Respuesta del servidor:", result)
             if (result.res === true) {
                 alert("¡Chat creado correctamente!");
-                setIsPopupOpen(false);
-                setEmailInput("");
+                closePopup();
                 chatsUser(userId);
             } else {
-                console.log("Error: " + (result.message || "No se pudo crear el chat"));
+                alert("Error: " + (result.message || "No se pudo crear el chat"));
             }
         } catch(error){
             console.log(error);
@@ -67,7 +84,7 @@ export default function ChatsPage() {
             <div className={styles.container}>
                 <div className={styles.title}>
                     <h1>Chats</h1>
-                    <button onClick={newChat}>Nuevo chat</button>
+                    <button onClick={openPopup}>Nuevo chat</button>
                 </div>
                 <div className={styles.chatsList}>
                     <ul>
@@ -81,6 +98,28 @@ export default function ChatsPage() {
                 <div className={styles.chatContent}>
 
                 </div>
+
+                <Popup 
+                    open={isPopupOpen}
+                    onClose={closePopup}
+                    modal
+                    nested
+                    closeOnDocumentClick={false}
+                >
+                    <div className={styles.modal}>
+                        <div className={styles.header}>
+                            <h2>Nuevo Chat</h2>
+                        </div>
+                        <div className={styles.content}>
+                            <p>Ingresa el mail del usuario con quien quieres chatear</p>
+                            <input type="mail" placeholder="ejemplo@mail.com" value={mailInput} onChange={(e) =>setMailInput(e.target.value)} className={styles.mailInput}></input>
+                        </div>
+                        <div className={styles.actions}>
+                            <button onClick={closePopup} className={styles.cancelBtn}>Cancelar</button>
+                            <button onClick={newChat} className={styles.createBtn}>Crear chat</button>
+                        </div>
+                    </div>
+                </Popup>
             </div>
         </>
     );
