@@ -2,9 +2,18 @@ var express = require('express'); //Tipo de servidor: Express
 var bodyParser = require('body-parser'); //Convierte los JSON
 var cors = require('cors');
 const { realizarQuery } = require('./modulos/mysql');
+const http = require('http');
+const { Server } = require('socket.io');
 
 var app = express(); //Inicializo express
 var port = process.env.PORT || 4000; //Ejecuto el servidor en el puerto 3000
+const server = http.createServer(app);
+const io = new Server(server, {
+    cors: {
+        origin: "http://localhost:3000", // URL del frontend
+        methods: ["GET", "POST"]
+    }
+});
 
 // Convierte una petición recibida (POST-GET...) a objeto JSON
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -17,13 +26,9 @@ app.get('/', function (req, res) {
     });
 });
 
-app.listen(port, function () {
-    console.log(`Server running in http://localhost:${port}`);
-});
-
 app.get('/users', async function (req, res) {
     let respuesta;
-    if (req.query.id != undefined) {
+    if (req.query.id_user != undefined) {
         respuesta = await realizarQuery(`SELECT * FROM Users WHERE id_user=${req.query.id_user}`)
     } else {
         respuesta = await realizarQuery("SELECT * FROM Users");
@@ -232,3 +237,76 @@ app.post('/chatHistory', async function(req,res) {
         res.send({res:false, message: "Error al obtener historial"})
     }
 })
+
+// Lógica de WebSocket
+io.on('connection', (socket) => {
+    console.log('Usuario conectado:', socket.id);
+
+    // Usuario se une a una sala de chat específica
+    socket.on('join-chat', (chatId) => {
+        socket.join(`chat_${chatId}`);
+        console.log(`Usuario ${socket.id} se unió al chat ${chatId}`);
+    });
+
+    // Usuario abandona una sala de chat
+    socket.on('leave-chat', (chatId) => {
+        socket.leave(`chat_${chatId}`);
+        console.log(`Usuario ${socket.id} abandonó el chat ${chatId}`);
+    });
+
+    // Manejo de mensajes en tiempo real
+    socket.on('send-message', async (data) => {
+        try {
+            const { chatId, userId, content, username } = data;
+            
+            // Insertar mensaje en la base de datos
+            const messageResult = await realizarQuery(`
+                INSERT INTO Messages (photo, date, id_user, content) VALUES
+                ("", "${new Date().toISOString()}", "${userId}", "${content}")
+            `);
+            
+            // Obtener el ID del mensaje insertado
+            const messageId = messageResult.insertId;
+            
+            // Relacionar el mensaje con el chat
+            await realizarQuery(`
+                INSERT INTO ChatsMessage (id_message, id_chat) VALUES
+                ("${messageId}", "${chatId}")
+            `);
+            
+            // Obtener el mensaje completo con información del usuario
+            const newMessage = await realizarQuery(`
+                SELECT m.*, u.username 
+                FROM Messages m
+                INNER JOIN Users u ON m.id_user = u.id_user
+                WHERE m.id_message = "${messageId}"
+            `);
+            
+            // Enviar el mensaje a todos los usuarios en el chat
+            io.to(`chat_${chatId}`).emit('new-message', newMessage[0]);
+            console.log(`Mensaje enviado al chat ${chatId}:`, newMessage[0]);
+            
+        } catch (error) {
+            console.log('Error al procesar mensaje:', error);
+            socket.emit('message-error', { error: 'No se pudo enviar el mensaje' });
+        }
+    });
+
+    // Usuario escribiendo (indicador de "está escribiendo...")
+    socket.on('typing', (data) => {
+        socket.to(`chat_${data.chatId}`).emit('user-typing', {
+            userId: data.userId,
+            username: data.username,
+            isTyping: data.isTyping
+        });
+    });
+
+    // Desconexión
+    socket.on('disconnect', () => {
+        console.log('Usuario desconectado:', socket.id);
+    });
+});
+
+server.listen(port, function () {
+    console.log(`Server running in http://localhost:${port}`);
+});

@@ -6,6 +6,7 @@ import Message from "@/components/Message";
 import { useEffect, useState } from "react";
 import styles from "./page.module.css";
 import Popup from 'reactjs-popup';
+import { io } from 'socket.io-client';
 
 export default function ChatsPage() {
     const [chats, setChats] = useState([])
@@ -14,6 +15,10 @@ export default function ChatsPage() {
     const [selectedChat, setSelectedChat] = useState(null);
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState("");
+    const [socket, setSocket] = useState(null);
+    const [userTyping, setUserTyping] = useState("");
+    const [typingTimeout, setTypingTimeout] = useState(null);
+
 
     useEffect(()=>{
         let userId= localStorage.getItem("userId")
@@ -23,6 +28,59 @@ export default function ChatsPage() {
             console.log("No se encontró el ID del usuario")
         }
     }, [])
+
+    //useEffect PARA INICIALIZAR WEBSOCKET 
+    useEffect(() => {
+        const newSocket = io('http://localhost:4000');
+        setSocket(newSocket);
+        console.log('WebSocket conectado');
+    // Limpiar conexión al desmontar el componente
+        return () => {
+            newSocket.disconnect();
+        };
+    }, []);
+
+    //useEffect PARA MANEJAR EVENTOS DE WEBSOCKET
+    useEffect(() => {
+        if (!socket) return;
+        // Escuchar nuevos mensajes
+        socket.on('new-message', (message) => {
+            console.log('Nuevo mensaje recibido:', message);
+            if (selectedChat && message.id_chat === selectedChat.id_chat) {
+                setMessages(prevMessages => [...prevMessages, message]);
+            }
+        });
+
+    // Escuchar indicador de escritura
+        socket.on('user-typing', (data) => {
+            if (data.isTyping) {
+                setUserTyping(`${data.username} está escribiendo...`);
+            } else {
+                setUserTyping("");
+            }
+        });
+
+    // Limpiar listeners al cambiar socket
+        return () => {
+            socket.off('new-message');
+            socket.off('user-typing');
+        };
+    }, [socket, selectedChat]); 
+
+    //useEffect PARA UNIRSE AL CHAT CUANDO SE SELECCIONA
+    useEffect(() => {
+        if (socket && selectedChat) {
+            socket.emit('join-chat', selectedChat.id_chat);
+            console.log('Uniéndose al chat:', selectedChat.id_chat);
+            
+            return () => {
+                socket.emit('leave-chat', selectedChat.id_chat);
+                console.log('Abandonando chat:', selectedChat.id_chat);
+            };
+        }
+    }, [socket, selectedChat]);
+
+
 
     async function chatsUser(userId) {
         try{
@@ -111,25 +169,30 @@ export default function ChatsPage() {
         }
     }
 
+    //Reemplace la funcion anterior sendMessage, por esta:
     async function sendMessage() {
-        if (!newMessage.trim() || !selectedChat) return;
-
+        if (!newMessage.trim() || !selectedChat || !socket) return;
         const userId = localStorage.getItem("userId");
-        
         try {
-            const messageResponse = await fetch("http://localhost:4000/messages", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    photo: "",
-                    date: new Date().toISOString(),
-                    id_user: userId,
-                    content: newMessage.trim()
-                })
+            const response = await fetch(`http://localhost:4000/users?id_user=${userId}`, {
+                method: "GET",
+                headers: { "Content-Type": "application/json" }
             });
-
-            if (messageResponse.ok) {
-                await chatHistory(selectedChat);
+            const userData = await response.json();
+            const user = userData[0]; // Primer usuario del resultado
+            
+            if (user) {
+                // Enviar mensaje a través de WebSocket
+                socket.emit('send-message', {
+                    chatId: selectedChat.id_chat,
+                    userId: userId,
+                    content: newMessage.trim(),
+                    username: user.username
+                });
+                console.log('Enviando mensaje:', {
+                    chatId: selectedChat.id_chat,
+                    content: newMessage.trim()
+                });
                 setNewMessage("");
             }
         } catch (error) {
@@ -137,10 +200,46 @@ export default function ChatsPage() {
         }
     }
 
-    const handleKeyPress = (e) => {
-        if (e.key === 'Enter') {
-            sendMessage();
+    //Agregue esta función para manejar el indicador de escritura 
+    function handleTyping() {
+        if (!socket || !selectedChat) return;
+        const userId = localStorage.getItem("userId");
+        // Emitir que el usuario está escribiendo
+        socket.emit('typing', {
+            chatId: selectedChat.id_chat,
+            userId: userId,
+            username: 'Usuario', // Puedes mejorar esto obteniendo el username real
+            isTyping: true
+        });
+        // Limpiar timeout anterior
+        if (typingTimeout) {
+            clearTimeout(typingTimeout);
         }
+        // Establecer nuevo timeout para dejar de escribir
+        const timeout = setTimeout(() => {
+            socket.emit('typing', {
+                chatId: selectedChat.id_chat,
+                userId: userId,
+                username: 'Usuario',
+                isTyping: false
+            });
+        }, 1500); // Deja de escribir después de 1.5 segundos de inactividad
+        setTypingTimeout(timeout);
+    }
+
+    const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+        sendMessage();
+    } else {
+        handleTyping();
+    }
+    };
+
+    const handleMessageChange = (e) => {
+    setNewMessage(e.target.value);
+    if (e.target.value.trim()) {
+        handleTyping();
+    }
     };
 
     return (
@@ -182,10 +281,19 @@ export default function ChatsPage() {
                                             No hay mensajes en este chat
                                         </div>
                                     )}
+                                    {userTyping && (
+                                        <div className={styles.typingIndicator} style={{
+                                            padding: '10px',
+                                            fontStyle: 'italic',
+                                            color: '#666',
+                                            textAlign: 'center'
+                                        }}>
+                                            {userTyping}
+                                        </div>
+                                    )}
                                 </div>
-
                                 <div className={styles.messageInput}>
-                                    <Input type="text" placeholder="Escribe un mensaje..." value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyPress = {handleKeyPress} page="chat"></Input>
+                                   <Input type="text" placeholder="Escribe un mensaje..." value={newMessage} onChange={handleMessageChange} onKeyPress = {handleKeyPress} page="chat"></Input>
                                     <button onClick={sendMessage} className={styles.sendButton} disabled={!newMessage.trim()}>Enviar</button>
                                 </div>
                             </>
