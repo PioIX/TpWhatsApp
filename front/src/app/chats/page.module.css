@@ -317,6 +317,18 @@
   animation: modalSlideIn 0.3s ease-out;
 }
 
+.connectionStatus {
+    margin-left: 10px;
+    font-size: 12px;
+}
+
+.typingIndicator {
+    padding: 10px;
+    font-style: italic;
+    color: #666;
+    text-align: center;
+}
+
 @keyframes modalSlideIn {
   from {
     opacity: 0;
