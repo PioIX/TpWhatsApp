@@ -268,7 +268,7 @@ export default function ChatsPage() {
                                     ) : (
                                         <div className={styles.noMessages}>
                                             No hay mensajes en este chat
-                                        </div>
+                                        </div>  
                                     )}
                                     {userTyping && (
                                         <div className={styles.typingIndicator}>

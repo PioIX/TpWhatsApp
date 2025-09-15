@@ -2,22 +2,22 @@ import { useState, useEffect } from 'react';
 import io from 'socket.io-client';
 
 const useSocket = (options = { withCredentials: false }, serverUrl = "ws://localhost:4000/") => { //ACÁ PONER LA IP DEL BACK
-  const [socket, setSocket] = useState(null);
-  const [isConnected, setIsConnected] = useState(false);
+const [socket, setSocket] = useState(null);
+const [isConnected, setIsConnected] = useState(false);
 
-  useEffect(() => {
+    useEffect(() => {
     // Crear una conexión con el backend usando Socket.IO
     const socketIo = io(serverUrl, options);
 
     // Actualizar el estado de la conexión
     socketIo.on('connect', () => {
-      setIsConnected(true);
-      console.log('WebSocket connectado.');
+        setIsConnected(true);
+        console.log('WebSocket connectado.');
     });
 
     socketIo.on('disconnect', () => {
-      setIsConnected(false);
-      console.log('WebSocket desconectado');
+        setIsConnected(false);
+        console.log('WebSocket desconectado');
     });
 
     // Guardar la instancia del socket en el estado
@@ -25,11 +25,11 @@ const useSocket = (options = { withCredentials: false }, serverUrl = "ws://local
 
     // Limpiar la conexión cuando el componente se desmonte
     return () => {
-      socketIo.disconnect();
+        socketIo.disconnect();
     };
-  }, [serverUrl, JSON.stringify(options)]);
+    }, [serverUrl, JSON.stringify(options)]);
 
-  return { socket, isConnected };
+    return { socket, isConnected };
 };
 
 export { useSocket };

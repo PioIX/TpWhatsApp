@@ -16,7 +16,6 @@
         "react": "^19.1.0",
         "react-dom": "^19.1.0",
         "reactjs-popup": "^2.0.6",
-        "socket.io": "^4.8.1",
         "socket.io-client": "^4.8.1"
     },
     "devDependencies": {
