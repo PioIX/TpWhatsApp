@@ -1,25 +1,42 @@
 var express = require('express'); //Tipo de servidor: Express
 var bodyParser = require('body-parser'); //Convierte los JSON
 var cors = require('cors');
+
 const session = require("express-session"); // Para el manejo de las variables de sesión
+
 const { realizarQuery } = require('./modulos/mysql');
-const http = require('http');
-const { Server } = require('socket.io');
 
 var app = express(); //Inicializo express
 var port = process.env.PORT || 4000; //Ejecuto el servidor en el puerto 3000
-const server = http.createServer(app);
-const io = new Server(server, {
-    cors: {
-        origin: "http://localhost:3000", // URL del frontend
-        methods: ["GET", "POST"]
-    }
-});
 
 // Convierte una petición recibida (POST-GET...) a objeto JSON
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors());
+
+const server = app.listen(port, function () {
+    console.log(`Server running in http://localhost:${port}`);
+});
+
+const io = require('socket.io')(server, {
+    cors: {
+        origin: ["http://localhost:3000", "http://localhost:3001"], 
+        methods: ["GET", "POST", "PUT", "DELETE"],  	
+        credentials: true                           	
+    }
+});
+
+const sessionMiddleware = session({
+    secret: "supersarasa",
+    resave: false,
+    saveUninitialized: false
+});
+
+app.use(sessionMiddleware);
+
+io.use((socket, next) => {
+    sessionMiddleware(socket.request, {}, next);
+});
 
 app.get('/', function (req, res) {
     res.status(200).send({
@@ -166,9 +183,30 @@ app.post('/registerUser', async function (req,res) {
 app.post('/chatsUser', async function (req,res) {
     console.log(req.body)
     try{
+        const currentUser = await realizarQuery(`
+            SELECT username FROM Users WHERE id_user = "${req.body.userId}"
+        `);
+        
+        if(currentUser.length === 0) {
+            res.send({ success: false, message: "Usuario no encontrado" });
+            return;
+        }
+        
+        const currentUsername = currentUser[0].username;
+        
         const chats = await realizarQuery(`
-            SELECT * FROM Chats WHERE id_user = "${req.body.userId}"
-            `)
+            SELECT DISTINCT c.*, 
+                   CASE 
+                       WHEN c.id_user = "${req.body.userId}" THEN c.chat_name
+                       ELSE u.username 
+                   END as display_name
+            FROM Chats c
+            LEFT JOIN Users u ON c.id_user = u.id_user
+            WHERE c.id_user = "${req.body.userId}" 
+               OR c.chat_name = "${currentUsername}"
+            ORDER BY c.id_chat DESC
+        `);
+        
         console.log("Chats encontrados:", chats)
         res.send({
             success: true,
@@ -195,21 +233,40 @@ app.post('/newChat', async function (req,res) {
         const targetUserId = response[0].id_user
         const targetUsername = response[0].username
         console.log("Usuario encontrado")
-        //Corroboro que ese usuario no tenga un chat con ese usuario previamente
         const existingChat = await realizarQuery(`
-            SELECT id_chat FROM Chats WHERE id_user="${userId}" AND chat_name = "${targetUsername}" AND is_group = "0"
+            SELECT DISTINCT c.id_chat, c.chat_name, c.id_user
+            FROM Chats c
+            WHERE (
+                (c.id_user = "${userId}" AND c.chat_name = "${targetUsername}") OR
+                (c.id_user = "${targetUserId}" AND c.chat_name = (
+                    SELECT username FROM Users WHERE id_user = "${userId}"
+                ))
+            ) AND c.is_group = "0"
         `);
-        if(existingChat.length>0){
-            console.log("Chat existente")
-            res.send({res:false, message: "Chat existente"})
-            return
+        
+        if(existingChat.length > 0){
+            console.log("Chat ya existe:", existingChat[0])
+            res.send({
+                res: true, 
+                message: "Chat encontrado",
+                chatId: existingChat[0].id_chat,
+                existing: true
+            });
+            return;
         }
+        
         const result = await realizarQuery(`
             INSERT INTO Chats (is_group, photo_group, chat_name, id_user) VALUES
             ("0","", "${targetUsername}","${userId}")
-        `);
-        console.log("Chats creado:", result);
-        res.send({ res: true, message: "Chat creado correctamente" });
+        `)
+        
+        console.log("Chat creado:", result);
+        res.send({ 
+            res: true, 
+            message: "Chat creado correctamente",
+            chatId: result.insertId,
+            existing: false
+        })
     } catch(error){
         console.log("Error al crear nuevo chat", error)
         res.send({res: false, message: "Error al crear chat"})
@@ -239,43 +296,55 @@ app.post('/chatHistory', async function(req,res) {
     }
 })
 
-// Lógica de WebSocket
-io.on('connection', (socket) => {
+io.on("connection", (socket) => {
+    const req = socket.request;
     console.log('Usuario conectado:', socket.id);
 
-    // Usuario se une a una sala de chat específica
-    socket.on('join-chat', (chatId) => {
-        socket.join(`chat_${chatId}`);
-        console.log(`Usuario ${socket.id} se unió al chat ${chatId}`);
+    socket.on('joinRoom', data => {
+        console.log("🚀 ~ io.on ~ req.session.room:", req.session.room)
+        if (req.session.room != undefined && req.session.room.length > 0){
+            socket.leave(req.session.room);
+        }
+        req.session.room = data.room;
+        socket.join(req.session.room);
+
+        console.log("Usuario se unió a sala:", req.session.room);
+    
+        // También unirse a la sala específica del chat
+        socket.join(data.room);
+        console.log("Usuario también en sala específica:", data.room);
+        
+        // Notificar a todos en la sala
+        io.to(req.session.room).emit('chat-messages', { 
+            user: req.session.user, 
+            room: req.session.room,
+            joined: true
+        });
     });
 
-    // Usuario abandona una sala de chat
-    socket.on('leave-chat', (chatId) => {
-        socket.leave(`chat_${chatId}`);
-        console.log(`Usuario ${socket.id} abandonó el chat ${chatId}`);
+    socket.on('pingAll', data => {
+        console.log("PING ALL: ", data);
+        io.emit('pingAll', { event: "Ping to all", message: data });
     });
 
-    // Manejo de mensajes en tiempo real
-    socket.on('send-message', async (data) => {
+    socket.on('sendMessage', async data => {
+        console.log("Mensaje recibido en backend:", data);
+        
         try {
-            const { chatId, userId, content, username } = data;
-            
-            // Insertar mensaje en la base de datos
+            // Guardar mensaje en base de datos
             const messageResult = await realizarQuery(`
                 INSERT INTO Messages (photo, date, id_user, content) VALUES
-                ("", "${new Date().toISOString()}", "${userId}", "${content}")
+                ("", "${new Date().toISOString()}", "${data.userId}", "${data.content}")
             `);
             
-            // Obtener el ID del mensaje insertado
             const messageId = messageResult.insertId;
             
-            // Relacionar el mensaje con el chat
             await realizarQuery(`
                 INSERT INTO ChatsMessage (id_message, id_chat) VALUES
-                ("${messageId}", "${chatId}")
+                ("${messageId}", "${data.chatId}")
             `);
             
-            // Obtener el mensaje completo con información del usuario
+            // Obtener el mensaje con información del usuario
             const newMessage = await realizarQuery(`
                 SELECT m.*, u.username 
                 FROM Messages m
@@ -283,31 +352,31 @@ io.on('connection', (socket) => {
                 WHERE m.id_message = "${messageId}"
             `);
             
-            // Enviar el mensaje a todos los usuarios en el chat
-            io.to(`chat_${chatId}`).emit('new-message', newMessage[0]);
-            console.log(`Mensaje enviado al chat ${chatId}:`, newMessage[0]);
+            console.log("Mensaje guardado:", newMessage[0]);
+        
+            // CAMBIO IMPORTANTE: Enviar a sala específica del chat, no a session.room
+            const roomName = `chat_${data.chatId}`;
+            io.to(roomName).emit('newMessage', { 
+                room: roomName, 
+                message: newMessage[0] 
+            });
+            
+            console.log(`Mensaje enviado a sala: ${roomName}`);
+            
+            // También enviar a la sala de sesión por compatibilidad
+            if (req.session.room) {
+                io.to(req.session.room).emit('newMessage', { 
+                    room: req.session.room, 
+                    message: newMessage[0] 
+                });
+            }
             
         } catch (error) {
             console.log('Error al procesar mensaje:', error);
-            socket.emit('message-error', { error: 'No se pudo enviar el mensaje' });
         }
     });
 
-    // Usuario escribiendo (indicador de "está escribiendo...")
-    socket.on('typing', (data) => {
-        socket.to(`chat_${data.chatId}`).emit('user-typing', {
-            userId: data.userId,
-            username: data.username,
-            isTyping: data.isTyping
-        });
-    });
-
-    // Desconexión
     socket.on('disconnect', () => {
-        console.log('Usuario desconectado:', socket.id);
-    });
-});
-
-server.listen(port, function () {
-    console.log(`Server running in http://localhost:${port}`);
+        console.log("Usuario desconectado:", socket.id);
+    })
 });

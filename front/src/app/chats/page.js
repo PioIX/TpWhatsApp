@@ -6,7 +6,7 @@ import Message from "@/components/Message";
 import { useEffect, useState } from "react";
 import styles from "./page.module.css";
 import Popup from 'reactjs-popup';
-import { io } from 'socket.io-client';
+import { useSocket } from "@/hooks/useSocket";
 
 export default function ChatsPage() {
     const [chats, setChats] = useState([])
@@ -15,10 +15,12 @@ export default function ChatsPage() {
     const [selectedChat, setSelectedChat] = useState(null);
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState("");
-    const [socket, setSocket] = useState(null);
     const [userTyping, setUserTyping] = useState("");
-    const [typingTimeout, setTypingTimeout] = useState(null);
 
+    const {socket, isConnected} = useSocket(
+        {withCredentials: true},
+        "http://localhost:4000/"
+    )
 
     useEffect(()=>{
         let userId= localStorage.getItem("userId")
@@ -29,54 +31,53 @@ export default function ChatsPage() {
         }
     }, [])
 
-    //useEffect PARA INICIALIZAR WEBSOCKET 
     useEffect(() => {
-        const newSocket = io('http://localhost:4000');
-        setSocket(newSocket);
-        console.log('WebSocket conectado');
-    // Limpiar conexión al desmontar el componente
-        return () => {
-            newSocket.disconnect();
-        };
-    }, []);
+        if (socket) {
+            console.log('Socket conectado:', isConnected);
+            
+            socket.on('newMessage', (data) => {
+                console.log('Nuevo mensaje recibido:', data);
+                if (data && data.message) {
+                    console.log("Mensaje extraído:", data.message)
+                    setMessages(prevMessages => {
+                        const exists = prevMessages.some(msg => 
+                            msg.id_message === data.message.id_message ||
+                            (msg.content === data.message.content && 
+                            msg.id_user === data.message.id_user &&
+                            Math.abs(new Date(msg.date) - new Date(data.message.date)) < 5000)
+                        );
+                        
+                        if (!exists) {
+                            console.log('✅ Agregando mensaje nuevo');
+                            return [...prevMessages, data.message];
+                        } else {
+                            console.log('⚠️ Mensaje ya existe');
+                            return prevMessages;
+                        }
+                    });
+                }
+            });
 
-    //useEffect PARA MANEJAR EVENTOS DE WEBSOCKET
-    useEffect(() => {
-        if (!socket) return;
-        // Escuchar nuevos mensajes
-        socket.on('new-message', (message) => {
-            console.log('Nuevo mensaje recibido:', message);
-            if (selectedChat && message.id_chat === selectedChat.id_chat) {
-                setMessages(prevMessages => [...prevMessages, message]);
-            }
-        });
+            socket.on('chat-messages', (data) => {
+                console.log('Chat messages:', data);
+            });
 
-    // Escuchar indicador de escritura
-        socket.on('user-typing', (data) => {
-            if (data.isTyping) {
-                setUserTyping(`${data.username} está escribiendo...`);
-            } else {
-                setUserTyping("");
-            }
-        });
+            socket.on('pingAll', (data) => {
+                console.log('Ping recibido:', data);
+            });
 
-    // Limpiar listeners al cambiar socket
-        return () => {
-            socket.off('new-message');
-            socket.off('user-typing');
-        };
-    }, [socket, selectedChat]); 
+            return () => {
+                socket.off('newMessage');
+                socket.off('chat-messages');
+                socket.off('pingAll');
+            };
+        }
+    }, [socket]);
 
-    //useEffect PARA UNIRSE AL CHAT CUANDO SE SELECCIONA
     useEffect(() => {
         if (socket && selectedChat) {
-            socket.emit('join-chat', selectedChat.id_chat);
-            console.log('Uniéndose al chat:', selectedChat.id_chat);
-            
-            return () => {
-                socket.emit('leave-chat', selectedChat.id_chat);
-                console.log('Abandonando chat:', selectedChat.id_chat);
-            };
+            socket.emit('joinRoom', {room: `chat_${selectedChat.id_chat}`});
+            console.log('Uniéndose al chat:', `chat_${selectedChat.id_chat}`);
         }
     }, [socket, selectedChat]);
 
@@ -131,7 +132,11 @@ export default function ChatsPage() {
             const result = await response.json();
             console.log("Respuesta del servidor:", result)
             if (result.res === true) {
-                alert("¡Chat creado correctamente!");
+                if (result.existing) {
+                    alert("Chat encontrado - redirigiendo...");
+                } else {
+                    alert("¡Chat creado correctamente!");
+                }
                 closePopup();
                 chatsUser(userId);
             } else {
@@ -161,6 +166,11 @@ export default function ChatsPage() {
             if(result.res === true){
                 setSelectedChat(chat);
                 setMessages(result.messages || [])
+                if (socket && isConnected) {
+                    const roomName = `chat_${chat.id_chat}`;
+                    socket.emit('joinRoom', {room: roomName});
+                    console.log('Uniéndose al chat después de cargar historial:', roomName);
+                }
             } else {
                 console.log("Error al cargar historial:", result.message)
             }
@@ -169,78 +179,53 @@ export default function ChatsPage() {
         }
     }
 
-    //Reemplace la funcion anterior sendMessage, por esta:
     async function sendMessage() {
-        if (!newMessage.trim() || !selectedChat || !socket) return;
-        const userId = localStorage.getItem("userId");
-        try {
-            const response = await fetch(`http://localhost:4000/users?id_user=${userId}`, {
-                method: "GET",
-                headers: { "Content-Type": "application/json" }
+        if (!newMessage.trim() || !selectedChat || !socket || !isConnected) {
+            console.log('No se puede enviar mensaje:', { 
+                message: newMessage.trim(), 
+                chat: selectedChat, 
+                socket: !!socket, 
+                connected: isConnected 
             });
-            const userData = await response.json();
-            const user = userData[0]; // Primer usuario del resultado
-            
-            if (user) {
-                // Enviar mensaje a través de WebSocket
-                socket.emit('send-message', {
-                    chatId: selectedChat.id_chat,
-                    userId: userId,
-                    content: newMessage.trim(),
-                    username: user.username
-                });
-                console.log('Enviando mensaje:', {
-                    chatId: selectedChat.id_chat,
-                    content: newMessage.trim()
-                });
-                setNewMessage("");
-            }
-        } catch (error) {
-            console.log("Error al enviar mensaje:", error);
+            return;
         }
-    }
 
-    //Agregue esta función para manejar el indicador de escritura 
-    function handleTyping() {
-        if (!socket || !selectedChat) return;
         const userId = localStorage.getItem("userId");
-        // Emitir que el usuario está escribiendo
-        socket.emit('typing', {
+        const messageContent = newMessage.trim()
+
+        setNewMessage("")
+        
+        console.log('Enviando mensaje con sendMessage event:', {
             chatId: selectedChat.id_chat,
             userId: userId,
-            username: 'Usuario', // Puedes mejorar esto obteniendo el username real
-            isTyping: true
+            content: messageContent
         });
-        // Limpiar timeout anterior
-        if (typingTimeout) {
-            clearTimeout(typingTimeout);
+
+        socket.emit('sendMessage', {
+            chatId: selectedChat.id_chat,
+            userId: userId,
+            content: messageContent
+        });
+
+        
+    }
+
+    const sendPingAll = () => {
+        if (socket && isConnected) {
+            socket.emit('pingAll', 'Mensaje de prueba para todos');
+            console.log('Ping enviado a todos');
         }
-        // Establecer nuevo timeout para dejar de escribir
-        const timeout = setTimeout(() => {
-            socket.emit('typing', {
-                chatId: selectedChat.id_chat,
-                userId: userId,
-                username: 'Usuario',
-                isTyping: false
-            });
-        }, 1500); // Deja de escribir después de 1.5 segundos de inactividad
-        setTypingTimeout(timeout);
     }
 
     const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
-        sendMessage();
-    } else {
-        handleTyping();
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
     }
-    };
 
     const handleMessageChange = (e) => {
-    setNewMessage(e.target.value);
-    if (e.target.value.trim()) {
-        handleTyping();
+        setNewMessage(e.target.value);
     }
-    };
 
     return (
         <>
@@ -248,6 +233,7 @@ export default function ChatsPage() {
                 <div className={styles.title}>
                     <h1>Chats</h1>
                     <button onClick={openPopup}>Nuevo chat</button>
+                    <button onClick={sendPingAll} disabled={!isConnected}>Ping a todos {isConnected ? '✅' : '❌'}</button>
                 </div>
                 <div className={styles.chatsList}>
                     <ul>
@@ -268,6 +254,9 @@ export default function ChatsPage() {
                                             className={styles.chatAvatar}
                                         ></img>
                                         <h3>{selectedChat.chat_name || selectedChat.username}</h3>
+                                        <span style={{ marginLeft: '10px', fontSize: '12px' }}>
+                                            {isConnected ? '🟢 Online' : '🔴 Offline'}
+                                        </span>
                                     </div>
                                 </div>
 
@@ -282,25 +271,21 @@ export default function ChatsPage() {
                                         </div>  
                                     )}
                                     {userTyping && (
-                                        <div className={styles.typingIndicator} style={{
-                                            padding: '10px',
-                                            fontStyle: 'italic',
-                                            color: '#666',
-                                            textAlign: 'center'
-                                        }}>
+                                        <div className={styles.typingIndicator}>
                                             {userTyping}
                                         </div>
                                     )}
                                 </div>
                                 <div className={styles.messageInput}>
-                                   <Input type="text" placeholder="Escribe un mensaje..." value={newMessage} onChange={handleMessageChange} onKeyPress = {handleKeyPress} page="chat"></Input>
-                                    <button onClick={sendMessage} className={styles.sendButton} disabled={!newMessage.trim()}>Enviar</button>
+                                    <Input type="text" placeholder="Escribe un mensaje..." value={newMessage} onChange={handleMessageChange} onKeyPress = {handleKeyPress} page="chat"></Input>
+                                    <button onClick={sendMessage} className={styles.sendButton} disabled={!newMessage.trim()}>Enviar {isConnected ? '' : '(Sin conexión)'}</button>
                                 </div>
                             </>
                         ) : (
                             <div className={styles.noChatSelected}>
                                 <h3>Selecciona un chat para comenzar</h3>
                                 <p>Elige una conversación de la lista para ver los mensajes</p>
+                                <p>Estado de conexión: {isConnected ? '🟢 Conectado' : '🔴 Desconectado'}</p>
                             </div>
                         )}
                 </div>
