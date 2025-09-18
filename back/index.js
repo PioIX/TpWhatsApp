@@ -327,55 +327,10 @@ io.on("connection", (socket) => {
         io.emit('pingAll', { event: "Ping to all", message: data });
     });
 
-    socket.on('sendMessage', async data => {
-        console.log("Mensaje recibido en backend:", data);
-        
-        try {
-            // Guardar mensaje en base de datos
-            const messageResult = await realizarQuery(`
-                INSERT INTO Messages (photo, date, id_user, content) VALUES
-                ("", "${new Date().toISOString()}", "${data.userId}", "${data.content}")
-            `);
-            
-            const messageId = messageResult.insertId;
-            
-            await realizarQuery(`
-                INSERT INTO ChatsMessage (id_message, id_chat) VALUES
-                ("${messageId}", "${data.chatId}")
-            `);
-            
-            // Obtener el mensaje con información del usuario
-            const newMessage = await realizarQuery(`
-                SELECT m.*, u.username 
-                FROM Messages m
-                INNER JOIN Users u ON m.id_user = u.id_user
-                WHERE m.id_message = "${messageId}"
-            `);
-            
-            console.log("Mensaje guardado:", newMessage[0]);
-        
-            // CAMBIO IMPORTANTE: Enviar a sala específica del chat, no a session.room
-            const roomName = `chat_${data.chatId}`;
-            io.to(roomName).emit('newMessage', { 
-                room: roomName, 
-                message: newMessage[0] 
-            });
-            
-            console.log(`Mensaje enviado a sala: ${roomName}`);
-            
-            // También enviar a la sala de sesión por compatibilidad
-            if (req.session.room) {
-                io.to(req.session.room).emit('newMessage', { 
-                    room: req.session.room, 
-                    message: newMessage[0] 
-                });
-            }
-            
-        } catch (error) {
-            console.log('Error al procesar mensaje:', error);
-        }
-    });
-
+    socket.on('sendMessage', data => {
+		io.to(req.session.room).emit('newMessage', { room: req.session.room, message: data });
+	});
+    
     socket.on('disconnect', () => {
         console.log("Usuario desconectado:", socket.id);
     })
