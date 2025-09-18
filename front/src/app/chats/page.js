@@ -36,26 +36,10 @@ export default function ChatsPage() {
             console.log('Socket conectado:', isConnected);
             
             socket.on('newMessage', (data) => {
-                console.log('Nuevo mensaje recibido:', data);
-                if (data && data.message) {
-                    console.log("Mensaje extraído:", data.message)
-                    setMessages(prevMessages => {
-                        const exists = prevMessages.some(msg => 
-                            msg.id_message === data.message.id_message ||
-                            (msg.content === data.message.content && 
-                            msg.id_user === data.message.id_user &&
-                            Math.abs(new Date(msg.date) - new Date(data.message.date)) < 5000)
-                        );
-                        
-                        if (!exists) {
-                            console.log('✅ Agregando mensaje nuevo');
-                            return [...prevMessages, data.message];
-                        } else {
-                            console.log('⚠️ Mensaje ya existe');
-                            return prevMessages;
-                        }
-                    });
-                }
+                console.log("LO q tengo antes   ", messages)
+                console.log("LO QUE VOY A GUARDAR", data.message)
+                setMessages([...messages, data.message])
+                
             });
 
             socket.on('chat-messages', (data) => {
@@ -80,8 +64,6 @@ export default function ChatsPage() {
             console.log('Uniéndose al chat:', `chat_${selectedChat.id_chat}`);
         }
     }, [socket, selectedChat]);
-
-
 
     async function chatsUser(userId) {
         try{
@@ -162,14 +144,13 @@ export default function ChatsPage() {
                 body: JSON.stringify(data)
             });
             const result = await response.json();
-            console.log("Respuesta del servidor: ", result)
             if(result.res === true){
+                console.log("TRAIGO MENSAJES", result.messages);
                 setSelectedChat(chat);
-                setMessages(result.messages || [])
+                setMessages("a")
                 if (socket && isConnected) {
                     const roomName = `chat_${chat.id_chat}`;
                     socket.emit('joinRoom', {room: roomName});
-                    console.log('Uniéndose al chat después de cargar historial:', roomName);
                 }
             } else {
                 console.log("Error al cargar historial:", result.message)
@@ -206,8 +187,6 @@ export default function ChatsPage() {
             userId: userId,
             content: messageContent
         });
-
-        
     }
 
     const sendPingAll = () => {
