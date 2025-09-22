@@ -14,6 +14,7 @@ export default function ChatsPage() {
     const [mailInput, setMailInput] = useState("");
     const [selectedChat, setSelectedChat] = useState(null);
     const [messages, setMessages] = useState([]);
+    const [messageSocket, setMessageSocket] = useState("");
     const [newMessage, setNewMessage] = useState("");
     const [userTyping, setUserTyping] = useState("");
 
@@ -31,14 +32,22 @@ export default function ChatsPage() {
         }
     }, [])
 
+    useEffect(()=>{
+        console.log(messages)
+    }, [messages])
+
+    useEffect(()=>{
+        console.log(messages)
+        setMessages([...messages, messageSocket])
+    }, [messageSocket])
+
     useEffect(() => {
         if (socket) {
             console.log('Socket conectado:', isConnected);
             
             socket.on('newMessage', (data) => {
-                console.log("LO q tengo antes   ", messages)
-                console.log("LO QUE VOY A GUARDAR", data.message)
-                setMessages([...messages, data.message])
+                
+                setMessageSocket(data.message)
                 
             });
 
@@ -147,7 +156,7 @@ export default function ChatsPage() {
             if(result.res === true){
                 console.log("TRAIGO MENSAJES", result.messages);
                 setSelectedChat(chat);
-                setMessages("a")
+                setMessages(result.messages)
                 if (socket && isConnected) {
                     const roomName = `chat_${chat.id_chat}`;
                     socket.emit('joinRoom', {room: roomName});
@@ -187,6 +196,21 @@ export default function ChatsPage() {
             userId: userId,
             content: messageContent
         });
+
+        const data = {
+            chatId: selectedChat.id_chat,
+            userId: userId,
+            content: messageContent
+        }
+
+        const response = await fetch("http://localhost:4000/messages", {
+                method: "POST",
+                headers: {"Content-Type" : "application/json"},
+                body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        console.log("Mensajes del chat:", result)
+        setMessages(result.messages)
     }
 
     const sendPingAll = () => {

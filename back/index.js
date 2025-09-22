@@ -131,7 +131,7 @@ app.post('/messages',async function (req, res) {
     try {
         await realizarQuery(`
         INSERT INTO Messages (photo, date, id_user, content) VALUES
-            ("${req.body.photo}","${req.body.date}","${req.body.id_user}","${req.body.content}";
+            ("${req.body.photo}","${req.body.date}","${req.body.userId}","${req.body.content}";
         `);
         res.send({res:"Mensaje agregado"});
     } catch (error){
