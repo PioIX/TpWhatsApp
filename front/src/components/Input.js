@@ -10,7 +10,7 @@ export default function Input({page, ...props}) {
                 [styles.chatPage]: page === "chat",
                 [styles.modalInput]: page === "modal",
                 })} 
-                type={props.type} onChange={props.onChange} placeholder={props.placeholder} id={props.id} value={props.value}></input>
+                type={props.type} onChange={props.onChange} placeholder={props.placeholder} id={props.id} value={props.value} onKeyDown={props.onKeyDown}></input>
         </>
     )
 }

@@ -36,18 +36,22 @@ export default function ChatsPage() {
         console.log(messages)
     }, [messages])
 
-    useEffect(()=>{
-        console.log(messages)
-        setMessages([...messages, messageSocket])
-    }, [messageSocket])
+    // useEffect(()=>{
+    //     console.log(messages)
+    //     setMessages([...messages, messageSocket])
+    // }, [messageSocket])
 
     useEffect(() => {
         if (socket) {
             console.log('Socket conectado:', isConnected);
             
             socket.on('newMessage', (data) => {
-                
-                setMessageSocket(data.message)
+                console.log('Nuevo mensaje recibido:', data);
+                setMessages((prevMessages) => [...prevMessages, {
+                    id_user: data.message.id_user,
+                    content: data.message.content,
+                    date: data.message.date
+                }]);
                 
             });
 
@@ -138,79 +142,133 @@ export default function ChatsPage() {
         }
     }
 
-    async function chatHistory(chat){
-        const userId= localStorage.getItem("userId")
+    // async function chatHistory(chat){
+    //     const userId= localStorage.getItem("userId")
 
+    //     const data = {
+    //         id_chat: chat.id_chat,
+    //         userId: userId
+    //     }
+
+    //     try{
+    //         const response = await fetch("http://localhost:4000/chatHistory", {
+    //             method: "POST",
+    //             headers: {"Content-Type" : "application/json"},
+    //             body: JSON.stringify(data)
+    //         });
+    //         const result = await response.json();
+    //         if(result.res === true){
+    //             console.log("TRAIGO MENSAJES", result.messages);
+    //             setSelectedChat(chat);
+    //             setMessages(result.messages)
+    //             if (socket && isConnected) {
+    //                 const roomName = `chat_${chat.id_chat}`;
+    //                 socket.emit('joinRoom', {room: roomName});
+    //             }
+    //         } else {
+    //             console.log("Error al cargar historial:", result.message)
+    //         }
+    //     } catch(error){
+    //         console.log("Error al cargar historial:", error)
+    //     }
+    // }
+
+
+    function chatHistory(chat) {
+        const userId = localStorage.getItem("userId");
         const data = {
             id_chat: chat.id_chat,
             userId: userId
-        }
+        };
 
-        try{
-            const response = await fetch("http://localhost:4000/chatHistory", {
-                method: "POST",
-                headers: {"Content-Type" : "application/json"},
-                body: JSON.stringify(data)
-            });
-            const result = await response.json();
-            if(result.res === true){
-                console.log("TRAIGO MENSAJES", result.messages);
+        fetch("http://localhost:4000/chatHistory", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+        })
+            .then(res => res.json())
+            .then(result => {
                 setSelectedChat(chat);
                 setMessages(result.messages)
-                if (socket && isConnected) {
-                    const roomName = `chat_${chat.id_chat}`;
-                    socket.emit('joinRoom', {room: roomName});
+            } )
+
+            if (socket) {
+                    socket.emit("joinRoom", {room: data.id_chat})
                 }
-            } else {
-                console.log("Error al cargar historial:", result.message)
-            }
-        } catch(error){
-            console.log("Error al cargar historial:", error)
-        }
     }
 
-    async function sendMessage() {
-        if (!newMessage.trim() || !selectedChat || !socket || !isConnected) {
-            console.log('No se puede enviar mensaje:', { 
-                message: newMessage.trim(), 
-                chat: selectedChat, 
-                socket: !!socket, 
-                connected: isConnected 
-            });
-            return;
-        }
+    function sendMessage() {
+        try {
+            if (!newMessage.trim() || !selectedChat || !socket || !isConnected) {
+                console.log('No se puede enviar mensaje:', { 
+                    message: newMessage.trim(), 
+                    chat: selectedChat, 
+                    socket: !!socket, 
+                    connected: isConnected 
+                });
+                return;
+            }
+    
+            const userId = localStorage.getItem("userId");
+            const messageContent = newMessage.trim()
+    
+            setNewMessage("")
+    
+    
+            const now = new Date();
+            // Formatear la fecha y hora manualmente
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, "0"); // Mes (0-indexado, por eso +1)
+            const day = String(now.getDate()).padStart(2, "0");
+            const hours = String(now.getHours()).padStart(2, "0");
+            const minutes = String(now.getMinutes()).padStart(2, "0");
+            const seconds = String(now.getSeconds()).padStart(2, "0");
+            
+            const formattedDate = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    
+    
+    
+            
+            const data = {
+                chatId: selectedChat.id_chat,
+                userId: userId,
+                content: messageContent,
+                date: formattedDate
+            }
+    
 
-        const userId = localStorage.getItem("userId");
-        const messageContent = newMessage.trim()
-
-        setNewMessage("")
-        
-        console.log('Enviando mensaje con sendMessage event:', {
-            chatId: selectedChat.id_chat,
-            userId: userId,
-            content: messageContent
-        });
-
-        socket.emit('sendMessage', {
-            chatId: selectedChat.id_chat,
-            userId: userId,
-            content: messageContent
-        });
-
-        const data = {
-            chatId: selectedChat.id_chat,
-            userId: userId,
-            content: messageContent
-        }
-
-        const response = await fetch("http://localhost:4000/messages", {
+            fetch("http://localhost:4000/messages", {
                 method: "POST",
-                headers: {"Content-Type" : "application/json"},
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data)
-        });
-        const result = await response.json();
-        console.log("Mensajes del chat:", result)
-        setMessages(result.messages)
+            })
+                .then(res => res.json())
+                .then(data => {
+                    console.log("Mensaje enviado:", data);
+                })
+
+            if (socket) {
+                socket.emit('sendMessage', data);
+            }
+            
+            // const response = await fetch("http://localhost:4000/messages", {
+            //         method: "POST",
+            //         headers: {"Content-Type" : "application/json"},
+            //         body: JSON.stringify(data)
+            // });
+            
+            // const result = await response.json();
+            // console.log("Mensajes del chat:", result)
+            // setMessages(result.messages)
+    
+
+
+            
+    
+    
+        } catch (error) {
+            console.log(error)
+        }
     }
 
     const sendPingAll = () => {
@@ -220,7 +278,7 @@ export default function ChatsPage() {
         }
     }
 
-    const handleKeyPress = (e) => {
+    function handleKeyPress(e) {
         if (e.key === 'Enter') {
             sendMessage();
         }
@@ -263,7 +321,7 @@ export default function ChatsPage() {
                                     </div>
                                 </div>
 
-                                <div className={styles.messagesArea}>
+                                {/* <div className={styles.messagesArea}>
                                     {messages.length > 0 ? (
                                         messages.map((message, index) => (
                                             <Message key={index} message={message} isMyMessage={message.id_user === localStorage.getItem("userId")} userId={localStorage.getItem("userId")}></Message>
@@ -278,9 +336,21 @@ export default function ChatsPage() {
                                             {userTyping}
                                         </div>
                                     )}
-                                </div>
+                                </div> */}
+
+
+                                <div className={styles.messagesArea}>
+                                    {messages.map((msg, i) => (
+                                    <Message
+                                        key={i}
+                                        message={msg.content}
+                                        date={msg.date}
+                                        isMyMessage={String(msg.id_user) === String(localStorage.getItem("userId"))}
+                                    />
+                                ))}
+                        </div>
                                 <div className={styles.messageInput}>
-                                    <Input type="text" placeholder="Escribe un mensaje..." value={newMessage} onChange={handleMessageChange} onKeyPress = {handleKeyPress} page="chat"></Input>
+                                    <Input type="text" placeholder="Escribe un mensaje..." value={newMessage} onChange={handleMessageChange} onKeydown={handleKeyPress} page="chat"></Input>
                                     <button onClick={sendMessage} className={styles.sendButton} disabled={!newMessage.trim()}>Enviar {isConnected ? '' : '(Sin conexión)'}</button>
                                 </div>
                             </>
@@ -317,4 +387,5 @@ export default function ChatsPage() {
             </div>
         </>
     );
+
 }

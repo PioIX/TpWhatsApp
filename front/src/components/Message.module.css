@@ -20,11 +20,13 @@
 .myMessage {
   align-self: flex-end;
   margin-left: auto;
+  
 }
 
 .otherMessage {
   align-self: flex-start;
   margin-right: auto;
+  
 }
 
 .messageContent {
