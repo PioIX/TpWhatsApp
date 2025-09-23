@@ -129,10 +129,23 @@ app.post('/chatsmessage',async function (req, res) {
 app.post('/messages',async function (req, res) {
     console.log(req.body);
     try {
-        await realizarQuery(`
+
+        
+        if (req.body.photo == undefined || req.body.photo == "") {
+            req.body.photo = null;
+        }
+        const mensaje = await realizarQuery(`
         INSERT INTO Messages (photo, date, id_user, content) VALUES
-            ("${req.body.photo}","${req.body.date}","${req.body.userId}","${req.body.content}";
+            (${req.body.photo},'${req.body.date}','${req.body.userId}','${req.body.content}');
         `);
+
+        const mensajeId = mensaje.insertId;
+
+        await realizarQuery(`
+            INSERT INTO ChatsMessage (id_message, id_chat) VALUES
+            (${mensajeId},${req.body.chatId});`)
+
+
         res.send({res:"Mensaje agregado"});
     } catch (error){
         console.log("Error al agregar el mensaje:", error);
