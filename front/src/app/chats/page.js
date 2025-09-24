@@ -142,38 +142,6 @@ export default function ChatsPage() {
         }
     }
 
-    // async function chatHistory(chat){
-    //     const userId= localStorage.getItem("userId")
-
-    //     const data = {
-    //         id_chat: chat.id_chat,
-    //         userId: userId
-    //     }
-
-    //     try{
-    //         const response = await fetch("http://localhost:4000/chatHistory", {
-    //             method: "POST",
-    //             headers: {"Content-Type" : "application/json"},
-    //             body: JSON.stringify(data)
-    //         });
-    //         const result = await response.json();
-    //         if(result.res === true){
-    //             console.log("TRAIGO MENSAJES", result.messages);
-    //             setSelectedChat(chat);
-    //             setMessages(result.messages)
-    //             if (socket && isConnected) {
-    //                 const roomName = `chat_${chat.id_chat}`;
-    //                 socket.emit('joinRoom', {room: roomName});
-    //             }
-    //         } else {
-    //             console.log("Error al cargar historial:", result.message)
-    //         }
-    //     } catch(error){
-    //         console.log("Error al cargar historial:", error)
-    //     }
-    // }
-
-
     function chatHistory(chat) {
         const userId = localStorage.getItem("userId");
         const data = {
@@ -216,18 +184,14 @@ export default function ChatsPage() {
     
     
             const now = new Date();
-            // Formatear la fecha y hora manualmente
             const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, "0"); // Mes (0-indexado, por eso +1)
+            const month = String(now.getMonth() + 1).padStart(2, "0");
             const day = String(now.getDate()).padStart(2, "0");
             const hours = String(now.getHours()).padStart(2, "0");
             const minutes = String(now.getMinutes()).padStart(2, "0");
             const seconds = String(now.getSeconds()).padStart(2, "0");
             
             const formattedDate = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-    
-    
-    
             
             const data = {
                 chatId: selectedChat.id_chat,
@@ -250,22 +214,6 @@ export default function ChatsPage() {
             if (socket) {
                 socket.emit('sendMessage', data);
             }
-            
-            // const response = await fetch("http://localhost:4000/messages", {
-            //         method: "POST",
-            //         headers: {"Content-Type" : "application/json"},
-            //         body: JSON.stringify(data)
-            // });
-            
-            // const result = await response.json();
-            // console.log("Mensajes del chat:", result)
-            // setMessages(result.messages)
-    
-
-
-            
-    
-    
         } catch (error) {
             console.log(error)
         }
@@ -321,34 +269,21 @@ export default function ChatsPage() {
                                     </div>
                                 </div>
 
-                                {/* <div className={styles.messagesArea}>
-                                    {messages.length > 0 ? (
-                                        messages.map((message, index) => (
-                                            <Message key={index} message={message} isMyMessage={message.id_user === localStorage.getItem("userId")} userId={localStorage.getItem("userId")}></Message>
+                                <div className={styles.messagesArea}>
+                                    {messages && messages.length > 0 ? (
+                                        messages.map((msg, i) => (
+                                            <Message
+                                                key={i}
+                                                message={msg.content}
+                                                date={msg.date}
+                                                isMyMessage={msg.id_user === Number(localStorage.getItem("userId"))}
+                                            />
                                         ))
                                     ) : (
                                         <div className={styles.noMessages}>
                                             No hay mensajes en este chat
-                                        </div>  
-                                    )}
-                                    {userTyping && (
-                                        <div className={styles.typingIndicator}>
-                                            {userTyping}
                                         </div>
                                     )}
-                                </div> */}
-
-
-                                <div className={styles.messagesArea}>
-                                    {messages.map((msg, i) => (
-                                        <Message
-                                        key={i}
-                                        message={msg.content}
-                                        date={msg.date}
-                                        // Verifica si el mensaje fue enviado por el usuario actual
-                                        isMyMessage={msg.id_user === Number(localStorage.getItem("userId"))}
-                                        />
-                                    ))}
                                 </div>
 
                                 <div className={styles.messageInput}>
