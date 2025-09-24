@@ -74,12 +74,12 @@ app.get('/messages', async function (req, res) {
     res.send(respuesta);
 });
 
-app.get('/chatsmessage', async function (req, res) {
+app.get('/usersxchat', async function (req, res) {
     let respuesta;
     if (req.query.id != undefined) {
-        respuesta = await realizarQuery(`SELECT * FROM ChatsMessage WHERE id_chat_message=${req.query.id_chat_message}`)
+        respuesta = await realizarQuery(`SELECT * FROM UsersxChat WHERE id_chat_message=${req.query.id}`)
     } else {
-        respuesta = await realizarQuery("SELECT * FROM ChatsMessage");
+        respuesta = await realizarQuery("SELECT * FROM UsersxChat");
     }
     res.send(respuesta);
 });
@@ -102,8 +102,8 @@ app.post('/chats',async function (req, res) {
     console.log(req.body);
     try {
         await realizarQuery(`
-        INSERT INTO Chats (is_group, photo_group, chat_name, id_user) VALUES
-            ("${req.body.is_group}","${req.body.photo_group}","${req.body.chat_name}","${req.body.id_user}";
+        INSERT INTO Chats (is_group, photo_group, chat_name) VALUES
+            ("${req.body.is_group}","${req.body.photo_group}","${req.body.chat_name}";
         `);
         res.send({res:"Chat agregado"});
     } catch (error) {
@@ -112,11 +112,11 @@ app.post('/chats',async function (req, res) {
     }
 })
 
-app.post('/chatsmessage',async function (req, res) {
+app.post('/usersxchat',async function (req, res) {
     console.log(req.body);
     try {
         await realizarQuery(`
-        INSERT INTO ChatsMessage (id_message, id_chat) VALUES
+        INSERT INTO UsersxChat (id_user, id_chat) VALUES
             ("${req.body.id_message}","${req.body.id_chat}";
         `);
         res.send({res:"Chat con mensajes agregado"});
@@ -135,14 +135,14 @@ app.post('/messages',async function (req, res) {
             req.body.photo = null;
         }
         const mensaje = await realizarQuery(`
-        INSERT INTO Messages (photo, date, id_user, content) VALUES
-            (${req.body.photo},'${req.body.date}','${req.body.userId}','${req.body.content}');
+        INSERT INTO Messages (photo, date, id_user, content, id_chat) VALUES
+            (${req.body.photo},'${req.body.date}','${req.body.userId}','${req.body.content}','${req.body.id_chat}');
         `);
 
         const mensajeId = mensaje.insertId;
 
         await realizarQuery(`
-            INSERT INTO ChatsMessage (id_message, id_chat) VALUES
+            INSERT INTO UsersxChat (id_message, id_chat) VALUES
             (${mensajeId},${req.body.chatId});`)
 
 
@@ -293,7 +293,7 @@ app.post('/chatHistory', async function(req,res) {
         const messages = await realizarQuery(`
             SELECT m.*, u.username 
             FROM Messages m
-            INNER JOIN ChatsMessage cm ON m.id_message = cm.id_message
+            INNER JOIN UsersxChat cm ON m.id_message = cm.id_message
             INNER JOIN Users u ON m.id_user = u.id_user
             WHERE cm.id_chat = "${id_chat}"
             ORDER BY m.date ASC 
