@@ -208,16 +208,14 @@ app.post('/chatsUser', async function (req,res) {
         const currentUsername = currentUser[0].username;
         
         const chats = await realizarQuery(`
-            SELECT DISTINCT c.*, 
-                   CASE 
-                       WHEN c.id_user = "${req.body.userId}" THEN c.chat_name
-                       ELSE u.username 
-                   END as display_name
-            FROM Chats c
-            LEFT JOIN Users u ON c.id_user = u.id_user
-            WHERE c.id_user = "${req.body.userId}" 
-               OR c.chat_name = "${currentUsername}"
-            ORDER BY c.id_chat DESC
+            SELECT DISTINCT Chats.*, Users.username as display_name
+            FROM Chats 
+            JOIN UsersxChat ON Chats.id_chat = UsersxChat.id_chat
+            LEFT JOIN Users ON Users.id_user != "${req.body.userId}" AND Users.id_user IN (
+                SELECT id_user FROM UsersxChat WHERE id_chat = Chats.id_chat
+            )
+            WHERE UsersxChat.id_user = "${req.body.userId}"
+            ORDER BY Chats.id_chat DESC
         `);
         
         console.log("Chats encontrados:", chats)
@@ -247,14 +245,15 @@ app.post('/newChat', async function (req,res) {
         const targetUsername = response[0].username
         console.log("Usuario encontrado")
         const existingChat = await realizarQuery(`
-            SELECT DISTINCT c.id_chat, c.chat_name, c.id_user
-            FROM Chats c
-            WHERE (
-                (c.id_user = "${userId}" AND c.chat_name = "${targetUsername}") OR
-                (c.id_user = "${targetUserId}" AND c.chat_name = (
-                    SELECT username FROM Users WHERE id_user = "${userId}"
-                ))
-            ) AND c.is_group = "0"
+            SELECT Chats.id_chat, Chats.chat_name 
+            FROM Chats
+            WHERE Chats.is_group = "0" 
+            AND Chats.id_chat IN (
+                SELECT id_chat FROM UsersxChat WHERE id_user = "${userId}"
+            ) 
+            AND Chats.id_chat IN (
+                SELECT id_chat FROM UsersxChat WHERE id_user = "${targetUserId}"
+            )
         `);
         
         if(existingChat.length > 0){
@@ -291,12 +290,12 @@ app.post('/chatHistory', async function(req,res) {
     try{
         const {id_chat, userId} = req.body
         const messages = await realizarQuery(`
-            SELECT m.*, u.username 
-            FROM Messages m
-            INNER JOIN UsersxChat cm ON m.id_message = cm.id_message
-            INNER JOIN Users u ON m.id_user = u.id_user
-            WHERE cm.id_chat = "${id_chat}"
-            ORDER BY m.date ASC 
+            SELECT Messages.*, Users.username 
+            FROM Messages
+            JOIN Users ON Messages.id_user = Users.id_user
+            JOIN UsersxChat ON Messages.id_message = UsersxChat.id_message
+            WHERE UsersxChat.id_chat = "${id_chat}"
+            ORDER BY Messages.date ASC
             `)
         console.log("Mensajes encontrados:", messages)
         res.send({
