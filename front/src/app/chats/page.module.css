@@ -156,13 +156,22 @@
 }
 
 .myMessage {
-  align-self: flex-end;
+  background-color: #DCF8C6; /* Verde claro, como WhatsApp */
+  text-align: right;
+  margin: 5px;
+  padding: 10px;
+  border-radius: 20px;
+  max-width: 70%;
   margin-left: auto;
 }
 
 .otherMessage {
-  align-self: flex-start;
-  margin-right: auto;
+  background-color: #FFFFFF; /* Blanco */
+  text-align: left;
+  margin: 5px;
+  padding: 10px;
+  border-radius: 20px;
+  max-width: 70%;
 }
 
 .messageContent {
