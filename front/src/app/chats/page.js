@@ -342,14 +342,15 @@ export default function ChatsPage() {
                                 <div className={styles.messagesArea}>
                                     {messages.map((msg, i) => (
                                         <Message
-                                            key={i}
-                                            message={msg.content}
-                                            date={msg.date}
-                                            // Convierte el userId del localStorage a número
-                                            isMyMessage={msg.id_user === Number(localStorage.getItem("userId"))}
+                                        key={i}
+                                        message={msg.content}
+                                        date={msg.date}
+                                        // Verifica si el mensaje fue enviado por el usuario actual
+                                        isMyMessage={msg.id_user === Number(localStorage.getItem("userId"))}
                                         />
                                     ))}
                                 </div>
+
                                 <div className={styles.messageInput}>
                                     <Input type="text" placeholder="Escribe un mensaje..." value={newMessage} onChange={handleMessageChange} onKeydown={handleKeyPress} page="chat"></Input>
                                     <button onClick={sendMessage} className={styles.sendButton} disabled={!newMessage.trim()}>Enviar {isConnected ? '' : '(Sin conexión)'}</button>
