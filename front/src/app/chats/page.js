@@ -215,18 +215,21 @@ export default function ChatsPage() {
                 content: messageContent,
                 date: formattedDate
             }
+
+            const newMessageObj = {
+                id_user: parseInt(userId),
+                content: messageContent,
+                date: formattedDate,
+                username: "Tú" // O el username del usuario actual
+            };
+
+            setMessages((prevMessages) => {
+                if (!Array.isArray(prevMessages)) {
+                    return [newMessageObj];
+                }
+                return [...prevMessages, newMessageObj];
+            });
     
-            /*
-            fetch("http://localhost:4000/messages", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(data)
-            })
-                .then(res => res.json())
-                .then(data => {
-                    console.log("Mensaje enviado:", data);
-                })
-            */
             if (socket) {
                 socket.emit('sendMessage', data);
             }

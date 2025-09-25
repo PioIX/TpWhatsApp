@@ -287,11 +287,11 @@ app.post('/chatHistory', async function(req,res) {
                     u.username 
                 FROM Messages m
                 INNER JOIN Users u ON m.id_user = u.id_user
-                WHERE m.id_message IN (
-                    SELECT DISTINCT m2.id_message 
-                    FROM Messages m2
-                    INNER JOIN UsersxChat uc ON uc.id_chat = ${id_chat}
-                    WHERE m2.id_user IN (SELECT id_user FROM UsersxChat WHERE id_chat = ${id_chat})
+                WHERE m.id_chat = ${id_chat}
+                AND EXISTS (
+                    SELECT 1 FROM UsersxChat uc 
+                    WHERE uc.id_chat = ${id_chat} 
+                    AND uc.id_user = ${userId}
                 )
                 ORDER BY m.date ASC
             `)
@@ -337,13 +337,23 @@ io.on("connection", (socket) => {
         io.emit('pingAll', { event: "Ping to all", message: data });
     });
 
-    socket.on('sendMessage', data => {
+    socket.on('sendMessage', async data => {
 		io.to(req.session.room).emit('newMessage', { room: req.session.room, message: data });
 
         realizarQuery(`
-            INSERT INTO Messages (photo, date, id_user, content) VALUES
-                (${data.photo != undefined ? "" : null},'${data.date}','${data.userId}','${data.content}');
+            INSERT INTO Messages (photo, date, id_user, content, id_chat) VALUES
+                (${data.photo != undefined ? "" : null},'${data.date}','${data.userId}','${data.content}', '${data.chatId}');
         `);
+        const existingRelation = await realizarQuery(`
+            SELECT * FROM UsersxChat WHERE id_user = ${data.userId} AND id_chat = ${data.chatId}
+        `);
+        
+        if (existingRelation.length === 0) {
+            await realizarQuery(`
+                INSERT INTO UsersxChat (id_user, id_chat) VALUES
+                (${data.userId}, ${data.chatId});
+            `);
+        }
 
 	});
     
