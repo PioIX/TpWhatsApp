@@ -47,11 +47,20 @@ export default function ChatsPage() {
             
             socket.on('newMessage', (data) => {
                 console.log('Nuevo mensaje recibido:', data);
-                setMessages((prevMessages) => [...prevMessages, {
-                    id_user: data.message.id_user,
-                    content: data.message.content,
-                    date: data.message.date
-                }]);
+                setMessages((prevMessages) =>{
+                    if (!Array.isArray(prevMessages)) {
+                        return [{
+                            id_user: data.message.id_user,
+                            content: data.message.content,
+                            date: data.message.date
+                        }];
+                    }
+                    return [...prevMessages, {
+                        id_user: data.message.id_user,
+                        content: data.message.content,
+                        date: data.message.date
+                    }];
+                });
                 
             });
 
@@ -89,7 +98,10 @@ export default function ChatsPage() {
             console.log("Respuesta HTTP status:", response.status)
             const result = await response.json()
             console.log("Respuesta del servidor:", result)
-            setChats(result.chats)
+            const uniqueChats = result.chats?.filter((chat, index, self) => 
+                index === self.findIndex(c => c.id_chat === chat.id_chat)
+            ) || [];
+            setChats(uniqueChats)
         } catch(error){
             console.log("Error al obtener chats", error)
         }
@@ -148,7 +160,7 @@ export default function ChatsPage() {
             id_chat: chat.id_chat,
             userId: userId
         };
-
+        console.log("HOLAAAAAA")
         fetch("http://localhost:4000/chatHistory", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -156,13 +168,17 @@ export default function ChatsPage() {
         })
             .then(res => res.json())
             .then(result => {
+                console.log("Historial del chat:", result);
                 setSelectedChat(chat);
-                setMessages(result.messages)
+                setMessages(Array.isArray(result.messages) ? result.messages : [])
             } )
-
+            .catch(error => {
+                console.log("Error al obtener historial:", error);
+                setMessages([]);
+            });
             if (socket) {
-                    socket.emit("joinRoom", {room: data.id_chat})
-                }
+                socket.emit("joinRoom", {room: `chat_${chat.id_chat}`});
+            }
     }
 
     function sendMessage() {
@@ -200,7 +216,7 @@ export default function ChatsPage() {
                 date: formattedDate
             }
     
-
+            /*
             fetch("http://localhost:4000/messages", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -210,7 +226,7 @@ export default function ChatsPage() {
                 .then(data => {
                     console.log("Mensaje enviado:", data);
                 })
-
+            */
             if (socket) {
                 socket.emit('sendMessage', data);
             }
