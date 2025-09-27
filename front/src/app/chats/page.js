@@ -295,7 +295,7 @@ export default function ChatsPage() {
                                                 key={i}
                                                 message={msg.content}
                                                 date={msg.date}
-                                                isMyMessage={msg.id_user === Number(localStorage.getItem("userId"))}
+                                                isMyMessage={Number(msg.id_user) === Number(localStorage.getItem("userId"))}
                                             />
                                         ))
                                     ) : (
