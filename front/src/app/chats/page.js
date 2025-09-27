@@ -24,7 +24,7 @@ export default function ChatsPage() {
     )
 
     useEffect(()=>{
-        let userId= localStorage.getItem("userId")
+        let userId= sessionStorage.getItem("userId")
         if(userId) {
             chatsUser(userId)
         } else {
@@ -47,22 +47,26 @@ export default function ChatsPage() {
             
             socket.on('newMessage', (data) => {
                 console.log('Nuevo mensaje recibido:', data);
-                setMessages((prevMessages) =>{
-                    if (!Array.isArray(prevMessages)) {
-                        return [{
-                            id_user: data.message.id_user,
-                            content: data.message.content,
-                            date: data.message.date
-                        }];
-                    }
-                    return [...prevMessages, {
-                        id_user: data.message.id_user,
-                        content: data.message.content,
-                        date: data.message.date
-                    }];
+                setMessages((prevMessages) => [...prevMessages, {
+                    id_user: data.message.userId,
+                    content: data.message.content,
+                    date: data.message.date
+                }])
+                    // if (!Array.isArray(prevMessages)) {
+                    //     return [{
+                    //         id_user: data.message.id_user,
+                    //         content: data.message.content,
+                    //         date: data.message.date
+                    //     }];
+                    // }
+                    // return [...prevMessages, {
+                    //     id_user: data.message.id_user,
+                    //     content: data.message.content,
+                    //     date: data.message.date
+                    // }];
                 });
                 
-            });
+            
 
             socket.on('chat-messages', (data) => {
                 console.log('Chat messages:', data);
@@ -76,7 +80,7 @@ export default function ChatsPage() {
                 socket.off('newMessage');
                 socket.off('chat-messages');
                 socket.off('pingAll');
-            };
+            };  
         }
     }, [socket]);
 
@@ -119,7 +123,7 @@ export default function ChatsPage() {
     }
 
     async function newChat(){
-        const userId= localStorage.getItem("userId")
+        const userId= sessionStorage.getItem("userId")
         if(!mailInput.trim()) {
             alert("Por favor, ingresa un mail")
             return
@@ -155,12 +159,12 @@ export default function ChatsPage() {
     }
 
     function chatHistory(chat) {
-        const userId = localStorage.getItem("userId");
+        const userId = sessionStorage.getItem("userId");
         const data = {
             id_chat: chat.id_chat,
             userId: userId
         };
-        console.log("HOLAAAAAA")
+
         fetch("http://localhost:4000/chatHistory", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -193,7 +197,7 @@ export default function ChatsPage() {
                 return;
             }
     
-            const userId = localStorage.getItem("userId");
+            const userId = sessionStorage.getItem("userId");
             const messageContent = newMessage.trim()
     
             setNewMessage("")
@@ -215,24 +219,11 @@ export default function ChatsPage() {
                 content: messageContent,
                 date: formattedDate
             }
-
-            const newMessageObj = {
-                id_user: parseInt(userId),
-                content: messageContent,
-                date: formattedDate,
-                username: "Tú" // O el username del usuario actual
-            };
-
-            setMessages((prevMessages) => {
-                if (!Array.isArray(prevMessages)) {
-                    return [newMessageObj];
-                }
-                return [...prevMessages, newMessageObj];
-            });
     
             if (socket) {
                 socket.emit('sendMessage', data);
             }
+
         } catch (error) {
             console.log(error)
         }
@@ -289,13 +280,14 @@ export default function ChatsPage() {
                                 </div>
 
                                 <div className={styles.messagesArea}>
+                                    {/* {console.log(String(messages[0].id_user), (sessionStorage.getItem("userId")))} */}
                                     {messages && messages.length > 0 ? (
                                         messages.map((msg, i) => (
                                             <Message
                                                 key={i}
                                                 message={msg.content}
                                                 date={msg.date}
-                                                isMyMessage={Number(msg.id_user) === Number(localStorage.getItem("userId"))}
+                                                isMyMessage={String(msg.id_user) === String(sessionStorage.getItem("userId"))}
                                             />
                                         ))
                                     ) : (
