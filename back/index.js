@@ -20,9 +20,9 @@ const server = app.listen(port, function () {
 
 const io = require('socket.io')(server, {
     cors: {
-        origin: ["http://localhost:3000", "http://localhost:3001"], 
-        methods: ["GET", "POST", "PUT", "DELETE"],  	
-        credentials: true                           	
+        origin: ["http://localhost:3000", "http://localhost:3001"],
+        methods: ["GET", "POST", "PUT", "DELETE"],
+        credentials: true
     }
 });
 
@@ -101,25 +101,23 @@ app.post('/addUsers',async function (req, res) {
 app.post('/messages',async function (req, res) {
     console.log(req.body);
     try {
-
-        
         if (req.body.photo == undefined || req.body.photo == "") {
             req.body.photo = null;
         }
         const mensaje = await realizarQuery(`
         INSERT INTO Messages (photo, date, id_user, content) VALUES
-            (${req.body.photo},'${req.body.date}','${req.body.userId}','${req.body.content}');
+            (${req.body.photo},'${req.body.date}',${req.body.userId},'${req.body.content}');
         `);
-        const mensajeId = mensaje.insertId;
-        const existingRelation = await realizarQuery(`
-            SELECT * FROM UsersxChat WHERE id_user = ${req.body.userId} AND id_chat = ${req.body.chatId}
-        `);
-        if (existingRelation.length === 0) {
-            await realizarQuery(`
-                INSERT INTO UsersxChat (id_user, id_chat) VALUES
-                (${req.body.userId},${req.body.chatId});
-            `);
-        }
+        // const mensajeId = mensaje.insertId;
+        // const existingRelation = await realizarQuery(`
+        //     SELECT * FROM UsersxChat WHERE id_user = ${req.body.userId} AND id_chat = ${req.body.chatId}
+        // `);
+        // if (existingRelation.length === 0) {
+        //     await realizarQuery(`
+        //         INSERT INTO UsersxChat (id_user, id_chat) VALUES
+        //         (${req.body.userId},${req.body.chatId});
+        //     `);
+        // }
         res.send({res:"Mensaje agregado"});
     } catch (error){
         console.log("Error al agregar el mensaje:", error);
@@ -133,7 +131,7 @@ app.post('/loginUser', async function (req, res) {
         const result = await realizarQuery(`
             SELECT * FROM Users WHERE mail = "${req.body.mail}";
         `);
-        
+
         console.log("Resultado de búsqueda:", result);
         if(result.length > 0){
             res.send({validar: true, id: result[0].id_user})
@@ -157,7 +155,7 @@ app.post('/registerUser', async function (req,res) {
             return;
         }
         const insertResult = await realizarQuery(`
-            INSERT INTO Users (username, phone_number, mail, password, photo) 
+            INSERT INTO Users (username, phone_number, mail, password, photo)
             VALUES ("${req.body.username}", "${req.body.phone_number}", "${req.body.mail}", "${req.body.password}", "${req.body.photo}");
         `);
         console.log("Usuario registrado:", insertResult);
@@ -173,16 +171,16 @@ app.post('/chatsUser', async function (req,res) {
         const currentUser = await realizarQuery(`
             SELECT username FROM Users WHERE id_user = "${req.body.userId}"
         `);
-        
+
         if(currentUser.length === 0) {
             res.send({ success: false, message: "Usuario no encontrado" });
             return;
         }
-        
+
         const currentUsername = currentUser[0].username;
-        
+
         const chats = await realizarQuery(`
-            SELECT DISTINCT 
+            SELECT DISTINCT
                 c.id_chat,
                 c.is_group,
                 c.photo_group,
@@ -196,7 +194,7 @@ app.post('/chatsUser', async function (req,res) {
             WHERE uc1.id_user = ${req.body.userId}
             ORDER BY c.id_chat DESC
         `);
-        
+
         console.log("Chats encontrados:", chats)
         res.send({
             success: true,
@@ -231,24 +229,24 @@ app.post('/newChat', async function (req,res) {
         const targetUsername = response[0].username
         console.log("Usuario encontrado")
         const existingChat = await realizarQuery(`
-            SELECT DISTINCT c.id_chat, c.chat_name 
+            SELECT DISTINCT c.id_chat, c.chat_name
             FROM Chats c
             INNER JOIN UsersxChat uc1 ON c.id_chat = uc1.id_chat AND uc1.id_user = ${userId}
             INNER JOIN UsersxChat uc2 ON c.id_chat = uc2.id_chat AND uc2.id_user = ${targetUserId}
             WHERE c.is_group = 0
         `);
-        
+
         if(existingChat.length > 0){
             console.log("Chat ya existe:", existingChat[0])
             res.send({
-                res: true, 
+                res: true,
                 message: "Chat encontrado",
                 chatId: existingChat[0].id_chat,
                 existing: true
             });
             return;
         }
-        
+
         const result = await realizarQuery(`
             INSERT INTO Chats (is_group, photo_group, chat_name) VALUES
             (0,"", "${targetUsername}")
@@ -260,8 +258,8 @@ app.post('/newChat', async function (req,res) {
             (${targetUserId}, ${chatId})
         `);
         console.log("Chat creado:", chatId);
-        res.send({ 
-            res: true, 
+        res.send({
+            res: true,
             message: "Chat creado correctamente",
             chatId: chatId,
             existing: false
@@ -277,20 +275,20 @@ app.post('/chatHistory', async function(req,res) {
     try{
         const {id_chat, userId} = req.body
         const messages = await realizarQuery(`
-                SELECT 
+                SELECT
                     m.id_message,
                     m.id_chat,
                     m.photo,
                     m.date,
                     m.id_user,
                     m.content,
-                    u.username 
+                    u.username
                 FROM Messages m
                 INNER JOIN Users u ON m.id_user = u.id_user
                 WHERE m.id_chat = ${id_chat}
                 AND EXISTS (
-                    SELECT 1 FROM UsersxChat uc 
-                    WHERE uc.id_chat = ${id_chat} 
+                    SELECT 1 FROM UsersxChat uc
+                    WHERE uc.id_chat = ${id_chat}
                     AND uc.id_user = ${userId}
                 )
                 ORDER BY m.date ASC
@@ -319,14 +317,14 @@ io.on("connection", (socket) => {
         socket.join(req.session.room);
 
         console.log("Usuario se unió a sala:", req.session.room);
-    
+
         // También unirse a la sala específica del chat
         socket.join(data.room);
         console.log("Usuario también en sala específica:", data.room);
-        
+
         // Notificar a todos en la sala
-        io.to(req.session.room).emit('chat-messages', { 
-            user: req.session.user, 
+        io.to(req.session.room).emit('chat-messages', {
+            user: req.session.user,
             room: req.session.room,
             joined: true
         });
@@ -337,26 +335,28 @@ io.on("connection", (socket) => {
         io.emit('pingAll', { event: "Ping to all", message: data });
     });
 
-    socket.on('sendMessage', async data => {
-		io.to(req.session.room).emit('newMessage', { room: req.session.room, message: data });
+    socket.on('sendMessage', (data) => {
+		io.to(req.session.room).emit("newMessage", { 
+            room: req.session.room, 
+            message: data 
+        });
 
         realizarQuery(`
             INSERT INTO Messages (photo, date, id_user, content, id_chat) VALUES
-                (${data.photo != undefined ? "" : null},'${data.date}','${data.userId}','${data.content}', '${data.chatId}');
+                (${data.photo != undefined ? "" : null},'${data.date}',${data.userId},'${data.content}', '${data.chatId}');
         `);
-        const existingRelation = await realizarQuery(`
+        const existingRelation = realizarQuery(`
             SELECT * FROM UsersxChat WHERE id_user = ${data.userId} AND id_chat = ${data.chatId}
         `);
-        
         if (existingRelation.length === 0) {
-            await realizarQuery(`
+            realizarQuery(`
                 INSERT INTO UsersxChat (id_user, id_chat) VALUES
                 (${data.userId}, ${data.chatId});
             `);
         }
 
 	});
-    
+
     socket.on('disconnect', () => {
         console.log("Usuario desconectado:", socket.id);
     })

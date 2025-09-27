@@ -46,7 +46,7 @@ export default function RegistroYLogin() {
 
       if (result.validar === true) {
         showModal("Éxito", "¡Has iniciado sesión correctamente!");
-        localStorage.setItem("userId", result.id)
+        sessionStorage.setItem("userId", result.id)
         router.push("/chats");
       } else {
         showModal("Error", result.message || "Credenciales incorrectas");
