@@ -127,12 +127,11 @@ app.post('/messages',async function (req, res) {
 
 
 app.post('/loginUser', async function (req, res) {
+    console.log("Resultado de búsqueda:", req.body);
     try {
         const result = await realizarQuery(`
-            SELECT * FROM Users WHERE mail = "${req.body.mail}";
+            SELECT * FROM Users WHERE mail = "${req.body.mail}" AND password = "${req.body.password}";
         `);
-
-        console.log("Resultado de búsqueda:", result);
         if(result.length > 0){
             res.send({validar: true, id: result[0].id_user})
         } else {
@@ -165,45 +164,58 @@ app.post('/registerUser', async function (req,res) {
     }
 })
 
-app.post('/chatsUser', async function (req,res) {
-    console.log(req.body)
-    try{
-        const currentUser = await realizarQuery(`
-            SELECT username FROM Users WHERE id_user = "${req.body.userId}"
-        `);
-
-        if(currentUser.length === 0) {
-            res.send({ success: false, message: "Usuario no encontrado" });
-            return;
-        }
-
-        const currentUsername = currentUser[0].username;
-
+app.post('/chatsUser', async function(req, res) {
+    console.log("Obteniendo chats para usuario:", req.body);
+    try {
+        const { userId } = req.body;
+        
+        // Query que devuelve el nombre del OTRO usuario en cada chat
         const chats = await realizarQuery(`
-            SELECT DISTINCT
+            SELECT 
                 c.id_chat,
                 c.is_group,
                 c.photo_group,
-                c.chat_name,
-                u.username as display_name,
-                u.photo as user_photo
+                CASE 
+                    WHEN c.is_group = 1 THEN c.chat_name
+                    ELSE (
+                        SELECT u.username 
+                        FROM UsersxChat uc2
+                        INNER JOIN Users u ON uc2.id_user = u.id_user
+                        WHERE uc2.id_chat = c.id_chat 
+                        AND uc2.id_user != ${userId}
+                        LIMIT 1
+                    )
+                END as chat_name,
+                (
+                    SELECT m.content 
+                    FROM Messages m 
+                    WHERE m.id_chat = c.id_chat 
+                    ORDER BY m.date DESC 
+                    LIMIT 1
+                ) as last_message,
+                (
+                    SELECT m.date 
+                    FROM Messages m 
+                    WHERE m.id_chat = c.id_chat 
+                    ORDER BY m.date DESC 
+                    LIMIT 1
+                ) as last_message_date
             FROM Chats c
-            INNER JOIN UsersxChat uc1 ON c.id_chat = uc1.id_chat
-            LEFT JOIN UsersxChat uc2 ON c.id_chat = uc2.id_chat AND uc2.id_user != ${req.body.userId}
-            LEFT JOIN Users u ON uc2.id_user = u.id_user
-            WHERE uc1.id_user = ${req.body.userId}
-            ORDER BY c.id_chat DESC
+            INNER JOIN UsersxChat uc ON c.id_chat = uc.id_chat
+            WHERE uc.id_user = ${userId}
+            ORDER BY last_message_date DESC
         `);
 
-        console.log("Chats encontrados:", chats)
+        console.log("Chats encontrados:", chats);
         res.send({
-            success: true,
+            res: true,
             chats: chats
-        })
-    } catch(error){
-        console.log("Error al traer los chats del usuario", error)
+        });
+    } catch(error) {
+        console.log("Error al obtener chats:", error);
+        res.send({ res: false, message: "Error al obtener chats" });
     }
-})
+});
 
 app.post('/newChat', async function (req,res) {
     console.log("Datos recibidos: ", req.body)
@@ -226,10 +238,9 @@ app.post('/newChat', async function (req,res) {
             return;
         }
         const targetUserId = response[0].id_user
-        const targetUsername = response[0].username
         console.log("Usuario encontrado")
         const existingChat = await realizarQuery(`
-            SELECT DISTINCT c.id_chat, c.chat_name
+            SELECT DISTINCT c.id_chat
             FROM Chats c
             INNER JOIN UsersxChat uc1 ON c.id_chat = uc1.id_chat AND uc1.id_user = ${userId}
             INNER JOIN UsersxChat uc2 ON c.id_chat = uc2.id_chat AND uc2.id_user = ${targetUserId}
@@ -247,9 +258,10 @@ app.post('/newChat', async function (req,res) {
             return;
         }
 
+        // CAMBIO: Ya no guardamos chat_name, lo dejamos NULL o vacío
         const result = await realizarQuery(`
             INSERT INTO Chats (is_group, photo_group, chat_name) VALUES
-            (0,"", "${targetUsername}")
+            (0, "", NULL)
         `)
         const chatId = result.insertId;
         await realizarQuery(`
