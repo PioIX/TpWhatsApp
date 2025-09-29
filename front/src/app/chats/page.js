@@ -128,10 +128,9 @@ export default function ChatsPage() {
             alert("Por favor, ingresa un mail")
             return
         }
-        
         const datosNewChat = {
             userId: userId,
-            mail: mailInput.trim() //Se envia el mail al back
+            mail: mailInput.trim()
         }
         try{
             console.log("Creando chat con: ", datosNewChat)
@@ -268,7 +267,7 @@ export default function ChatsPage() {
                             <>
                                 <div className={styles.chatHeader}>
                                     <div className={styles.chatHeaderInfo}>
-                                        <img src={selectedChat.photo || "https://imagenes2.eltiempo.com/files/image_600_455/files/fp/uploads/2025/04/01/67ec4ef31f2ce.r_d.866-866-3464.jpeg"}
+                                        <img src={selectedChat.photo_group || "https://imagenes2.eltiempo.com/files/image_600_455/files/fp/uploads/2025/04/01/67ec4ef31f2ce.r_d.866-866-3464.jpeg"}
                                             alt={selectedChat.chat_name || selectedChat.username}
                                             className={styles.chatAvatar}
                                         ></img>

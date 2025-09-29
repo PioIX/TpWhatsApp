@@ -3,7 +3,7 @@
 import styles from "./Contact.module.css";
 import clsx from "clsx"
 
-export default function Contact({chats, isSelected, onClick, ...props}) {
+export default function Contact({chats, isSelected, onClick}) {
     return(
         <>
             <button 

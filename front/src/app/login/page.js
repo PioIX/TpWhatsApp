@@ -29,21 +29,19 @@ export default function RegistroYLogin() {
       showModal("Error. Debes completar todos los campos")
       return
     }
-    
     const datosLogin = {
       mail: mail, 
       password: password,
     }
     try {
+      console.log(datosLogin)
       const response = await fetch("http://localhost:4000/loginUser", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(datosLogin),
       })
-
       const result = await response.json()
       console.log("Respuesta del servidor:", result)
-
       if (result.validar === true) {
         showModal("Éxito", "¡Has iniciado sesión correctamente!");
         sessionStorage.setItem("userId", result.id)
